@@ -10,7 +10,7 @@ import {
   Moon,
 } from "lucide-react";
 
-function Header() {
+function Header({ profile }) {
   const [isOpen, setIsOpen] = useState(false);
   const [option, setOption] = useState(null); // 'build' or 'copy'
   const [formData, setFormData] = useState({
@@ -20,8 +20,9 @@ function Header() {
     platform: "whatsapp",
   });
 
-  const YOUR_WHATSAPP_NUMBER = "2348060110195";
-  const YOUR_TELEGRAM_USERNAME = "OpEmmaVvy";
+  // These should come from a secure config or environment variable, not hardcoded
+  const YOUR_WHATSAPP_NUMBER = profile?.whatsapp || "2348060110195";
+  const YOUR_TELEGRAM_USERNAME = profile?.telegram || "OpEmmaVvy";
 
   // Theme State: tracking light or dark
   const [theme, setTheme] = useState("light");
@@ -125,7 +126,7 @@ function Header() {
               </span>
             </button>
           </div>
-          
+
           <div>
             <button
               onClick={() => setIsOpen(true)}
