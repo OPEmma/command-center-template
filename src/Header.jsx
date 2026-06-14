@@ -125,13 +125,13 @@ function Header() {
               </span>
             </button>
           </div>
-          {/* SIGN UP ACTION */}
+          
           <div>
             <button
               onClick={() => setIsOpen(true)}
               className="rounded-xl bg-purple-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95"
             >
-              Sign Up
+              Get Started
             </button>
           </div>
         </div>
