@@ -7,18 +7,16 @@ import {
   LayoutGrid,
 } from "lucide-react";
 
-// THIS IS THE INFRASTRUCTURE BLUEPRINT
-// Other developers can manipulate these values directly to update the entire UI
-const initialProjectsData = [
+const defaultProjectsData = [
   {
     id: 1,
-    title: "E-Commerce Launchpad",
-    client: "TL Johnsons Ltd",
+    title: "THREE",
+    client: "Collaborated with ",
     progress: 75,
-    status: "In Progress",
-    image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&auto=format&fit=crop&q=60",
-    tags: ["Next.js", "Tailwind", "Stripe"],
+    status: "Completed",
+    url: "https://trustevents.com.ng/",
+    image: "WhatsApp Image 2026-06-15 at 18.53.50.jpeg",
+    tags: ["React", "Tailwind", "Stripe"],
   },
   {
     id: 2,
@@ -26,8 +24,7 @@ const initialProjectsData = [
     client: "Self (Open Source)",
     progress: 100,
     status: "Completed",
-    image:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60",
+    url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60",
     tags: ["React", "Three.js", "Framer"],
   },
   {
@@ -36,26 +33,24 @@ const initialProjectsData = [
     client: "Acme Analytics",
     progress: 40,
     status: "In Progress",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&auto=format&fit=crop&q=60",
+    url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&auto=format&fit=crop&q=60",
     tags: ["TypeScript", "Recharts", "Supabase"],
   },
-
   {
     id: 4,
     title: "AI Content Studio",
     client: "Helix Media Group",
     progress: 100,
     status: "Completed",
-    image:
-      "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=500&auto=format&fit=crop&q=60", // Premium AI/Tech abstract placeholder
+    url: "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=500&auto=format&fit=crop&q=60",
     tags: ["OpenAI", "Next.js", "Radix UI"],
   },
 ];
 
-function Hero() {
-  const [projects] = useState(initialProjectsData);
-  const [mobileFilter, setMobileFilter] = useState("all"); // 'all', 'in-progress', 'completed'
+function Hero({ profile }) {
+  const projects = profile?.projects || defaultProjectsData;
+
+  const [mobileFilter, setMobileFilter] = useState("all");
 
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);
@@ -107,7 +102,7 @@ function Hero() {
             </span>
           </div>
 
-          {/* MOBILE FILTER TOGGLE - Only visible on mobile */}
+          {/* MOBILE FILTER TOGGLE */}
           <div className="flex sm:hidden w-full">
             <div className="inline-flex w-full rounded-full bg-gray-100 p-1.5 dark:bg-gray-800">
               <button
@@ -143,14 +138,16 @@ function Hero() {
             </div>
           </div>
 
-          {/* Desktop: Show all projects */}
+          {/* Desktop Layout Matrix */}
           <div className="hidden sm:grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <div
+              <a
                 key={project.id}
+                href={project.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-600/5 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-purple-900/40"
               >
-                {/* Visual Asset Container (Image Placeholder) */}
                 <div className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <img
                     src={project.image}
@@ -158,7 +155,6 @@ function Hero() {
                     className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  {/* Status Overlay Badge */}
                   <div
                     className={`absolute top-3 right-3 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur-md ${
                       project.progress === 100
@@ -175,7 +171,6 @@ function Hero() {
                   </div>
                 </div>
 
-                {/* Content Core Body Layout */}
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-3 flex flex-wrap gap-1.5">
                     {project.tags.map((tag, idx) => (
@@ -188,9 +183,16 @@ function Hero() {
                     ))}
                   </div>
 
-                  <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                    {project.title}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                      {project.title}
+                    </h3>
+                    <ExternalLink
+                      size={14}
+                      className="text-gray-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100 dark:text-gray-500 shrink-0 mt-1"
+                    />
+                  </div>
+
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     Client:{" "}
                     <span className="font-medium text-gray-600 dark:text-gray-300">
@@ -198,7 +200,6 @@ function Hero() {
                     </span>
                   </p>
 
-                  {/* Sprints Progress Core Visual Bar Slider */}
                   <div className="mt-6 space-y-2">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-gray-500 dark:text-gray-400">
@@ -225,30 +226,21 @@ function Hero() {
                       />
                     </div>
                   </div>
-
-                  {/* Outbound External Redirect Action Link */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 hover:text-purple-600 dark:text-gray-500 dark:hover:text-purple-400"
-                    >
-                      <span>Launch Preview</span>
-                      <ExternalLink size={12} />
-                    </button>
-                  </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
 
-          {/* Mobile: Show filtered projects */}
+          {/* Mobile Layout Matrix */}
           <div className="grid sm:hidden gap-6 grid-cols-1">
             {mobileFilteredProjects.map((project) => (
-              <div
+              <a
                 key={project.id}
+                href={project.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-600/5 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-purple-900/40"
               >
-                {/* Visual Asset Container (Image Placeholder) */}
                 <div className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <img
                     src={project.image}
@@ -256,7 +248,6 @@ function Hero() {
                     className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  {/* Status Overlay Badge */}
                   <div
                     className={`absolute top-3 right-3 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur-md ${
                       project.progress === 100
@@ -273,7 +264,6 @@ function Hero() {
                   </div>
                 </div>
 
-                {/* Content Core Body Layout */}
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-3 flex flex-wrap gap-1.5">
                     {project.tags.map((tag, idx) => (
@@ -286,9 +276,16 @@ function Hero() {
                     ))}
                   </div>
 
-                  <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                    {project.title}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                      {project.title}
+                    </h3>
+                    <ExternalLink
+                      size={14}
+                      className="text-gray-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100 dark:text-gray-500 shrink-0 mt-1"
+                    />
+                  </div>
+
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     Client:{" "}
                     <span className="font-medium text-gray-600 dark:text-gray-300">
@@ -296,7 +293,6 @@ function Hero() {
                     </span>
                   </p>
 
-                  {/* Sprints Progress Core Visual Bar Slider */}
                   <div className="mt-6 space-y-2">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-gray-500 dark:text-gray-400">
@@ -323,19 +319,8 @@ function Hero() {
                       />
                     </div>
                   </div>
-
-                  {/* Outbound External Redirect Action Link */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 hover:text-purple-600 dark:text-gray-500 dark:hover:text-purple-400"
-                    >
-                      <span>Launch Preview</span>
-                      <ExternalLink size={12} />
-                    </button>
-                  </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </section>
@@ -343,4 +328,5 @@ function Hero() {
     </main>
   );
 }
+
 export default Hero;

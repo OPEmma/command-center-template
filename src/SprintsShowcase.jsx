@@ -17,7 +17,7 @@ export default function SprintsShowcase() {
       return;
     }
 
-    // Dynamic URL: Fetches from your centralized hosting bucket or profile folder
+    // Dynamic URL: Fetches from your centralized hosting bucket or profile folder 
     // e.g., /profiles/alex.json
     fetch(`/profiles/${userSubdomain}.json`)
       .then((res) => {
