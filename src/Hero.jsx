@@ -46,7 +46,7 @@ const defaultProjectsData = [
     status: "Completed",
     url: "https://ng.pycon.org/",
     image: "Screenshot 2026-06-17 001617.png",
-    tags: ["Wordpress", "Next.js", "Radix UI"],
+    tags: ["Python", "Django", "Tailwind"],
   },
   {
     id: 5,
@@ -56,7 +56,7 @@ const defaultProjectsData = [
     status: "Completed",
     url: "https://popcat.click/",
     image: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
-    tags: ["Wordpress", "Next.js", "Radix UI"],
+    tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
   },
 ];
 
