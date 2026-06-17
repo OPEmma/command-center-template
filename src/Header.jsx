@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient";
+import { supabase } from "../SupabaseClient";
 import { useState } from "react";
 import {
   MessageSquare,
