@@ -20,13 +20,13 @@ const defaultProjectsData = [
   },
   {
     id: 2,
-    title: "THREE",
-    client: "Collaborated with THREE",
+    title: "Popcat",
+    client: "Popcat.io",
     progress: 100,
     status: "Completed",
-    url: "https://three.ws/",
-    image: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg", 
-    tags: ["React", "Three.js", "Framer", "Blender"],
+    url: "https://popcat.click/",
+    image: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
+    tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
   },
   {
     id: 3,
@@ -40,6 +40,16 @@ const defaultProjectsData = [
   },
   {
     id: 4,
+    title: "THREE",
+    client: "Collaborated with THREE",
+    progress: 100,
+    status: "Completed",
+    url: "https://three.ws/",
+    image: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg",
+    tags: ["React", "Three.js", "Framer", "Blender"],
+  },
+  {
+    id: 5,
     title: "PyCon",
     client: "Collaborated with PyCon.co",
     progress: 100,
@@ -47,16 +57,6 @@ const defaultProjectsData = [
     url: "https://ng.pycon.org/",
     image: "Screenshot 2026-06-17 001617.png",
     tags: ["Python", "Django", "Tailwind"],
-  },
-  {
-    id: 5,
-    title: "Popcat",
-    client: "Popcat.io",
-    progress: 100,
-    status: "Completed",
-    url: "https://popcat.click/",
-    image: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
-    tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
   },
 ];
 
