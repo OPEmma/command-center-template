@@ -1,4 +1,4 @@
-import { supabase } from "C:\Users\youTube\Documents\New folder\freelance\src\supabaseClient.js";
+import { supabase } from "supabaseClient.js";
 import { useState } from "react";
 import {
   MessageSquare,
