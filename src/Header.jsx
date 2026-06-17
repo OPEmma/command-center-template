@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient";
+import { supabase } from "C:\Users\youTube\Documents\New folder\freelance\src\supabaseClient.js";
 import { useState } from "react";
 import {
   MessageSquare,
@@ -132,27 +132,29 @@ function Header({ profile }) {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            username: subdomain.toLowerCase().trim(),
-            full_name: customWorkspace.siteName,
-            bio: customWorkspace.developerTitle,
-            whatsapp_number: integrationData.whatsappHandle,
-            telegram_handle: integrationData.telegramHandle,
-            selected_projects: integrationData.customSites,
-          }
-        ]);
+      const { data, error } = await supabase.from("profiles").insert([
+        {
+          username: subdomain.toLowerCase().trim(),
+          full_name: customWorkspace.siteName,
+          bio: customWorkspace.developerTitle,
+          whatsapp_number: integrationData.whatsappHandle,
+          telegram_handle: integrationData.telegramHandle,
+          selected_projects: integrationData.customSites,
+        },
+      ]);
 
       if (error) {
-        if (error.code === '23505') {
-          throw new Error("This username/subdomain is already taken! Try another one.");
+        if (error.code === "23505") {
+          throw new Error(
+            "This username/subdomain is already taken! Try another one.",
+          );
         }
         throw error;
       }
-      
-      alert(`Your portfolio is launching live at https://${subdomain.toLowerCase().trim()}.devhub.ng`);
+
+      alert(
+        `Your portfolio is launching live at https://${subdomain.toLowerCase().trim()}.devhub.ng`,
+      );
 
       // Reset clean modal state
       setIsOpen(false);
@@ -169,7 +171,6 @@ function Header({ profile }) {
         telegramHandle: "",
         customSites: "",
       });
-
     } catch (error) {
       alert(error.message || "Something went wrong saving your profile.");
     }
