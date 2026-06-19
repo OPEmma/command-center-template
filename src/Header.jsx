@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MessageSquare,
   Copy,
@@ -11,9 +11,10 @@ import {
   Globe,
   Settings,
   Sparkles,
+  LogIn,
+  Mail,
 } from "lucide-react";
 
-// Curated elite preset themes to prevent awkward custom style mixtures
 const EXCLUSIVE_THEMES = {
   cyberPurple: {
     name: "Cyber Purple",
@@ -51,12 +52,17 @@ const EXCLUSIVE_THEMES = {
 };
 
 function Header({ profile }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [option, setOption] = useState(null); // null | 'build' | 'copy'
-  const [copyStep, setCopyStep] = useState("selection"); // 'selection' | 'manualForm' | 'domainPopup' | 'integrations'
-  const [selectedTheme, setSelectedTheme] = useState("cyberPurple");
+  const [session, setSession] = useState(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
 
-  // Custom Workspace Inputs
+  const [isOpen, setIsOpen] = useState(false);
+  const [option, setOption] = useState(null);
+  const [copyStep, setCopyStep] = useState("selection");
+  const [selectedTheme, setSelectedTheme] = useState("cyberPurple");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [subdomain, setSubdomain] = useState("");
   const [customWorkspace, setCustomWorkspace] = useState({
     siteName: "",
@@ -64,8 +70,8 @@ function Header({ profile }) {
     repoUrl: "",
   });
 
-  // New states for integrations and custom sites step
   const [integrationData, setIntegrationData] = useState({
+    email: "",
     whatsappHandle: "",
     telegramHandle: "",
     customSites: "",
@@ -83,6 +89,49 @@ function Header({ profile }) {
   const [theme, setTheme] = useState("light");
 
   const currentActiveTheme = EXCLUSIVE_THEMES[selectedTheme];
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleEmailSignIn = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: authEmail,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) throw error;
+
+      alert("Verification link sent! Check your email to sign in.");
+      setAuthEmail("");
+    } catch (error) {
+      setAuthError(error.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -131,12 +180,15 @@ function Header({ profile }) {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const { data, error } = await supabase.from("profiles").insert([
+      const { error } = await supabase.from("profiles").insert([
         {
           username: subdomain.toLowerCase().trim(),
           full_name: customWorkspace.siteName,
           bio: customWorkspace.developerTitle,
+          email: session?.user?.email,
           whatsapp_number: integrationData.whatsappHandle,
           telegram_handle: integrationData.telegramHandle,
           selected_projects: integrationData.customSites,
@@ -153,35 +205,31 @@ function Header({ profile }) {
       }
 
       alert(
-        `Your portfolio is launching live at https://${subdomain.toLowerCase().trim()}.devhub.ng`,
+        `Your portfolio is live at https://${subdomain.toLowerCase().trim()}.devhub.ng`,
       );
 
-      // Reset clean modal state
       setIsOpen(false);
       setOption(null);
       setCopyStep("selection");
       setSubdomain("");
-      setCustomWorkspace({
-        siteName: "",
-        developerTitle: "",
-        repoUrl: "",
-      });
+      setCustomWorkspace({ siteName: "", developerTitle: "", repoUrl: "" });
       setIntegrationData({
+        email: "",
         whatsappHandle: "",
         telegramHandle: "",
         customSites: "",
       });
     } catch (error) {
-      alert(error.message || "Something went wrong saving your profile.");
+      alert(error.message || "Error saving profile.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <>
-      {/* HEADER NAVIGATION */}
       <header className="sticky top-0 z-50 w-full border-b border-purple-100 bg-white/80 backdrop-blur-md transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          {/* LOGO AREA */}
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-purple-600 p-2 text-white">
               <Layers size={20} />
@@ -191,7 +239,6 @@ function Header({ profile }) {
             </span>
           </div>
 
-          {/* MIDDLE AREA: THEME TOGGLE CENTERED */}
           <div className="flex items-center">
             <button
               onClick={toggleTheme}
@@ -221,25 +268,98 @@ function Header({ profile }) {
             </button>
           </div>
 
-          {/* SIGN UP ACTION */}
-          <div>
-            <button
-              onClick={() => setIsOpen(true)}
-              className="rounded-xl bg-purple-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95"
-            >
-              Get Started
-            </button>
+          <div className="flex items-center gap-3">
+            {session ? (
+              <>
+                <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">
+                  {session.user.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors hidden sm:block"
+                >
+                  Logout
+                </button>
+                <button
+                  onClick={() => setIsOpen(true)}
+                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-2"
+                >
+                  <span>Dashboard</span>
+                  <ArrowRight size={14} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsOpen(true)}
+                className="rounded-xl bg-purple-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95"
+              >
+                Get Started
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* MODAL OVERLAY */}
-      {isOpen && (
+      {isOpen && !session && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 mb-3">
+                <LogIn size={24} className="text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Sign in to DevHub
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                No passwords — just enter your email.
+              </p>
+            </div>
+
+            <form onSubmit={handleEmailSignIn} className="space-y-3">
+              <div>
+                <input
+                  type="email"
+                  required
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+
+              {authError && (
+                <p className="text-red-500 text-xs text-center">{authError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Mail size={16} />
+                {authLoading ? "Sending link..." : "Send Verification Link"}
+              </button>
+            </form>
+
+            <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-4">
+              We'll email you a one-click login link. No password needed.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isOpen && session && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
           <div
             className={`relative w-full max-w-xl overflow-hidden rounded-2xl border bg-gradient-to-br ${option === "copy" ? `${currentActiveTheme.bg} ${currentActiveTheme.border}` : "bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800"} p-5 sm:p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95`}
           >
-            {/* Close Button */}
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -251,11 +371,10 @@ function Header({ profile }) {
               <X size={18} />
             </button>
 
-            {/* STEP 1: CHOOSE AN OPTION */}
             {!option && (
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Get Started with DevCenter
+                  Welcome, {session.user.email}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6">
                   Choose how you want to interact with our infrastructure
@@ -311,7 +430,6 @@ function Header({ profile }) {
               </div>
             )}
 
-            {/* STEP 2A: CONTACT FORM SUBMIT */}
             {option === "build" && (
               <form onSubmit={handleBuildSubmit} className="space-y-4">
                 <div>
@@ -418,10 +536,8 @@ function Header({ profile }) {
               </form>
             )}
 
-            {/* STEP 2B: REBUILT VIBRANT INFRASTRUCTURE ENGINE */}
             {option === "copy" && (
               <div className="text-white space-y-5">
-                {/* Header Row */}
                 <div>
                   <div className="flex items-center gap-2">
                     <Settings
@@ -443,7 +559,6 @@ function Header({ profile }) {
                   </p>
                 </div>
 
-                {/* THEME PRESET PICKER BUTTON GRID */}
                 <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
                     Curated Node Preset Theme Palette
@@ -454,11 +569,7 @@ function Header({ profile }) {
                         key={key}
                         type="button"
                         onClick={() => setSelectedTheme(key)}
-                        className={`flex items-center justify-between px-3 py-1.5 rounded-lg border text-xs transition-all ${
-                          selectedTheme === key
-                            ? `${currentActiveTheme.border} bg-white/10 font-semibold text-white`
-                            : "border-transparent bg-slate-950/40 text-slate-400 hover:bg-slate-950/60"
-                        }`}
+                        className={`flex items-center justify-between px-3 py-1.5 rounded-lg border text-xs transition-all ${selectedTheme === key ? `${currentActiveTheme.border} bg-white/10 font-semibold text-white` : "border-transparent bg-slate-950/40 text-slate-400 hover:bg-slate-950/60"}`}
                       >
                         <span>{item.name}</span>
                         <span
@@ -469,9 +580,7 @@ function Header({ profile }) {
                   </div>
                 </div>
 
-                {/* FLOW TRACKER VIEWS */}
                 <div className="min-h-[180px]">
-                  {/* PATHWAY 1: MAIN SELECTION */}
                   {copyStep === "selection" && (
                     <div className="space-y-3">
                       <div className="rounded-xl bg-white/5 border border-white/5 p-4 space-y-2 text-xs text-slate-300">
@@ -490,7 +599,6 @@ function Header({ profile }) {
                           </li>
                         </ul>
                       </div>
-
                       <div
                         className={`border rounded-xl p-3 text-xs font-medium flex items-center gap-2 ${currentActiveTheme.pill}`}
                       >
@@ -498,7 +606,6 @@ function Header({ profile }) {
                         Ready to launch. Choose your replication pipeline method
                         below to spin up the asset wrapper.
                       </div>
-
                       <div className="grid grid-cols-2 gap-3 pt-2">
                         <button
                           type="button"
@@ -525,7 +632,6 @@ function Header({ profile }) {
                     </div>
                   )}
 
-                  {/* PATHWAY 2: MANUAL WORKSPACE FORM */}
                   {copyStep === "manualForm" && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -569,7 +675,6 @@ function Header({ profile }) {
                           className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
-
                       <div className="flex gap-3 pt-4">
                         <button
                           type="button"
@@ -593,22 +698,18 @@ function Header({ profile }) {
                     </div>
                   )}
 
-                  {/* PATHWAY 3: POPUP DOMAIN RESERVATION */}
                   {copyStep === "domainPopup" && (
                     <div className="space-y-4 text-center py-2">
-                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/5 border border-white/10 text-xl text-purple-400">
+                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/5 border border-white/10">
                         <Globe size={20} className={currentActiveTheme.text} />
                       </div>
-                      <div>
-                        <h4 className="text-base font-bold tracking-tight">
-                          Claim Your Network Identity
-                        </h4>
-                        <p className="text-xs text-slate-400 max-w-xs mx-auto mt-0.5">
-                          Assign a secure subdomain prefix to route your
-                          compiled sandbox environment files.
-                        </p>
-                      </div>
-
+                      <h4 className="text-base font-bold tracking-tight">
+                        Claim Your Network Identity
+                      </h4>
+                      <p className="text-xs text-slate-400 max-w-xs mx-auto mt-0.5">
+                        Assign a secure subdomain prefix to route your compiled
+                        sandbox environment files.
+                      </p>
                       <div className="max-w-xs mx-auto">
                         <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden focus-within:border-slate-600 transition-colors">
                           <input
@@ -630,7 +731,6 @@ function Header({ profile }) {
                           </span>
                         </div>
                       </div>
-
                       <div className="flex justify-center gap-3 pt-3">
                         <button
                           type="button"
@@ -651,7 +751,6 @@ function Header({ profile }) {
                     </div>
                   )}
 
-                  {/* PATHWAY 4: INTEGRATION HANDLES & FALLBACK SITES */}
                   {copyStep === "integrations" && (
                     <form
                       onSubmit={handlePublishWorkspace}
@@ -660,7 +759,7 @@ function Header({ profile }) {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                            WhatsApp Handle / No.
+                            WhatsApp Handle
                           </label>
                           <input
                             type="text"
@@ -680,12 +779,11 @@ function Header({ profile }) {
                             name="telegramHandle"
                             value={integrationData.telegramHandle}
                             onChange={handleIntegrationChange}
-                            placeholder="e.g. @telegram-username"
+                            placeholder="e.g. @username"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
                           />
                         </div>
                       </div>
-
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                           Sites Created / Collabs (Optional)
@@ -695,11 +793,10 @@ function Header({ profile }) {
                           value={integrationData.customSites}
                           onChange={handleIntegrationChange}
                           rows={2}
-                          placeholder="Leave completely blank to use original hardcoded sites instead..."
+                          placeholder="Leave blank to use defaults..."
                           className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-slate-600 resize-none"
                         />
                       </div>
-
                       <div className="flex gap-3 pt-3">
                         <button
                           type="button"
@@ -710,9 +807,12 @@ function Header({ profile }) {
                         </button>
                         <button
                           type="submit"
-                          className={`w-2/3 rounded-xl text-xs font-bold py-2.5 transition ${currentActiveTheme.accent}`}
+                          disabled={isSubmitting}
+                          className={`w-2/3 rounded-xl text-xs font-bold py-2.5 transition disabled:opacity-40 disabled:cursor-not-allowed ${currentActiveTheme.accent}`}
                         >
-                          Upload & Publish Core
+                          {isSubmitting
+                            ? "Publishing..."
+                            : "Upload & Publish Core"}
                         </button>
                       </div>
                     </form>
