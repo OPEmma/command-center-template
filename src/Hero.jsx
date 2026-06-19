@@ -32,7 +32,7 @@ const defaultProjectsData = [
     id: 3,
     title: " UniTrade × UI Student Union",
     client: "Collaborated with UI Student Union",
-    progress: 80,
+    progress: 85,
     status: "In Progress",
     url: "https://unitradeconnect.com.ng/",
     image: "WhatsApp Image 2026-06-16 at 23.55.33.jpeg",
