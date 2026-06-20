@@ -1,15 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient.js";
-import {
-  Copy,
-  ArrowRight,
-  Globe,
-  Settings,
-  Sparkles,
-  Layers,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { Copy, ArrowRight, Globe } from "lucide-react";
 
 const EXCLUSIVE_THEMES = {
   cyberPurple: {
@@ -66,8 +57,8 @@ function Dashboard() {
 
   const currentActiveTheme = EXCLUSIVE_THEMES[selectedTheme];
 
-  // Check session
-  useState(() => {
+  // FIXED: useEffect instead of useState
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
@@ -114,14 +105,9 @@ function Dashboard() {
       alert(
         `Your portfolio is live at https://${subdomain.toLowerCase().trim()}.devhub.ng`,
       );
-      setCopyStep("selection");
-      setSubdomain("");
-      setCustomWorkspace({ siteName: "", developerTitle: "", repoUrl: "" });
-      setIntegrationData({
-        whatsappHandle: "",
-        telegramHandle: "",
-        customSites: "",
-      });
+
+      // Reload to refresh data
+      window.location.reload();
     } catch (error) {
       alert(error.message || "Error saving profile.");
     } finally {

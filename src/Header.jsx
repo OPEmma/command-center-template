@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   MessageSquare,
@@ -282,13 +283,13 @@ function Header({ profile }) {
                 >
                   Logout
                 </button>
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-2"
                 >
-                  <Gauge size={16} />
                   <span>Dashboard</span>
-                </a>
+                  <Gauge size={18} />
+                </Link>
               </>
             ) : (
               <button

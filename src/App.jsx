@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./Header.jsx";
 import Hero from "./Hero.jsx";
 import Dashboard from "./Dashboard.jsx";
@@ -22,13 +23,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Supabase auth session
-  const [session, setSession] = useState(null);
-
   // 1. Initialize Supabase Auth Listener FIRST
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
       if (session) {
         console.log("User signed in via magic link:", session.user.email);
       }
@@ -37,7 +34,6 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
       if (session) {
         console.log("Auth state changed — signed in:", session.user.email);
       }
@@ -106,17 +102,6 @@ function App() {
     fetchUserProfile();
   }, [subdomain]);
 
-  // 4. Logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-  };
-
-  // DASHBOARD ROUTE — Check this first before loading/error
-  if (window.location.pathname === "/dashboard") {
-    return <Dashboard />;
-  }
-
   // Loading state
   if (loading) {
     return (
@@ -170,12 +155,22 @@ function App() {
     );
   }
 
-  // ROUTE B: Main landing page
+  // ROUTE B: Main app with React Router
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-950">
-      <Header profile={profileData} />
-      <Hero profile={profileData} />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/"
+          element={
+            <div className="relative min-h-screen bg-white dark:bg-gray-950">
+              <Header profile={profileData} />
+              <Hero profile={profileData} />
+            </div>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
