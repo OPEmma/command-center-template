@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "./Header.jsx";
 import Hero from "./Hero.jsx";
+import Dashboard from "./Dashboard.jsx";
 import { supabase } from "./supabaseClient";
 
 const RESERVED_SUBDOMAINS = [
@@ -26,7 +27,6 @@ function App() {
 
   // 1. Initialize Supabase Auth Listener FIRST
   useEffect(() => {
-    // Check for existing session on page load (handles magic link callback)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -34,7 +34,6 @@ function App() {
       }
     });
 
-    // Listen for auth state changes (magic link sign-in)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -112,6 +111,11 @@ function App() {
     await supabase.auth.signOut();
     setSession(null);
   };
+
+  // DASHBOARD ROUTE — Check this first before loading/error
+  if (window.location.pathname === "/dashboard") {
+    return <Dashboard />;
+  }
 
   // Loading state
   if (loading) {

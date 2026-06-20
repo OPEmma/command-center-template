@@ -13,6 +13,7 @@ import {
   Sparkles,
   LogIn,
   Mail,
+  Gauge,
 } from "lucide-react";
 
 const EXCLUSIVE_THEMES = {
@@ -268,6 +269,7 @@ function Header({ profile }) {
             </button>
           </div>
 
+          {/* AUTH BUTTONS */}
           <div className="flex items-center gap-3">
             {session ? (
               <>
@@ -280,13 +282,13 @@ function Header({ profile }) {
                 >
                   Logout
                 </button>
-                <button
-                  onClick={() => setIsOpen(true)}
+                <a
+                  href="/dashboard"
                   className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-2"
                 >
+                  <Gauge size={16} />
                   <span>Dashboard</span>
-                  <ArrowRight size={14} />
-                </button>
+                </a>
               </>
             ) : (
               <button
@@ -300,6 +302,7 @@ function Header({ profile }) {
         </div>
       </header>
 
+      {/* AUTH MODAL */}
       {isOpen && !session && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
           <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
@@ -355,18 +358,16 @@ function Header({ profile }) {
         </div>
       )}
 
+      {/* CONNECT WITH US MODAL (BUILD) */}
       {isOpen && session && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
-          <div
-            className={`relative w-full max-w-xl overflow-hidden rounded-2xl border bg-gradient-to-br ${option === "copy" ? `${currentActiveTheme.bg} ${currentActiveTheme.border}` : "bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800"} p-5 sm:p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95`}
-          >
+          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border bg-gradient-to-br bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800 p-5 sm:p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95">
             <button
               onClick={() => {
                 setIsOpen(false);
                 setOption(null);
-                setCopyStep("selection");
               }}
-              className={`absolute right-3 top-3 sm:right-4 sm:top-4 p-1 rounded-lg transition-colors ${option === "copy" ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+              className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <X size={18} />
             </button>
@@ -400,29 +401,6 @@ function Header({ profile }) {
                       <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-1">
                         Submit your basic contact info and route directly to
                         WhatsApp or Telegram to kickstart your project plan.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setOption("copy")}
-                    className="group flex items-start gap-3 sm:gap-4 rounded-xl border border-gray-200 p-3 sm:p-4 text-left transition hover:border-purple-400 hover:bg-white dark:border-gray-800 dark:bg-gray-800/20 dark:hover:bg-gray-800"
-                  >
-                    <div className="rounded-lg bg-gray-100 p-2.5 sm:p-3 text-gray-600 group-hover:bg-purple-100 group-hover:text-purple-600 dark:bg-gray-800 dark:text-gray-400 transition">
-                      <Copy size={20} />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm sm:font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        Copy Infrastructure Template{" "}
-                        <ArrowRight
-                          size={14}
-                          className="opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-4px] group-hover:translate-x-0"
-                        />
-                      </h4>
-                      <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Duplicate this codebase via GitHub or type manual node
-                        configurations to deploy directly into your sandbox
-                        profile dynamically.
                       </p>
                     </div>
                   </button>
@@ -534,291 +512,6 @@ function Header({ profile }) {
                   </button>
                 </div>
               </form>
-            )}
-
-            {option === "copy" && (
-              <div className="text-white space-y-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Settings
-                      className={`animate-spin [animation-duration:8s] ${currentActiveTheme.text}`}
-                      size={18}
-                    />
-                    <span
-                      className={`text-xs font-bold uppercase tracking-widest ${currentActiveTheme.text}`}
-                    >
-                      Automated Schema Core
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-extrabold tracking-tight mt-1">
-                    Fork Full Infrastructure
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Deploy this responsive app layout wrapper directly into an
-                    editable structure.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
-                    Curated Node Preset Theme Palette
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(EXCLUSIVE_THEMES).map(([key, item]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setSelectedTheme(key)}
-                        className={`flex items-center justify-between px-3 py-1.5 rounded-lg border text-xs transition-all ${selectedTheme === key ? `${currentActiveTheme.border} bg-white/10 font-semibold text-white` : "border-transparent bg-slate-950/40 text-slate-400 hover:bg-slate-950/60"}`}
-                      >
-                        <span>{item.name}</span>
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full ${item.accent.split(" ")[0]}`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="min-h-[180px]">
-                  {copyStep === "selection" && (
-                    <div className="space-y-3">
-                      <div className="rounded-xl bg-white/5 border border-white/5 p-4 space-y-2 text-xs text-slate-300">
-                        <p className="flex items-center gap-2 font-semibold text-white">
-                          Package Manifest Bundle Contents:
-                        </p>
-                        <ul className="list-disc pl-4 space-y-1 text-slate-400">
-                          <li>
-                            Fully Configured Recharts Month-over-Month Line
-                            Flowcharts
-                          </li>
-                          <li>Adaptive 4-Column Statcard Grid UI Containers</li>
-                          <li>
-                            No-Code Dynamic JSON State Mutators for Sprints &
-                            Images
-                          </li>
-                        </ul>
-                      </div>
-                      <div
-                        className={`border rounded-xl p-3 text-xs font-medium flex items-center gap-2 ${currentActiveTheme.pill}`}
-                      >
-                        <Sparkles size={14} className="shrink-0" />
-                        Ready to launch. Choose your replication pipeline method
-                        below to spin up the asset wrapper.
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.open(
-                              "https://github.com/OPEmma/command-center-template",
-                              "_blank",
-                            );
-                            setIsOpen(false);
-                            setOption(null);
-                          }}
-                          className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-900/80 text-xs font-bold text-white transition py-3"
-                        >
-                          <Copy size={14} /> Visit Repository
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCopyStep("manualForm")}
-                          className={`flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition py-3 ${currentActiveTheme.accent}`}
-                        >
-                          Type Parameters <ArrowRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {copyStep === "manualForm" && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                            Workspace Hub Name
-                          </label>
-                          <input
-                            type="text"
-                            name="siteName"
-                            value={customWorkspace.siteName}
-                            onChange={handleWorkspaceChange}
-                            placeholder="e.g. Nexus Core"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                            Developer Handle Title
-                          </label>
-                          <input
-                            type="text"
-                            name="developerTitle"
-                            value={customWorkspace.developerTitle}
-                            onChange={handleWorkspaceChange}
-                            placeholder="e.g. Lead Architect"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                          Source Repository Target URL (Optional)
-                        </label>
-                        <input
-                          type="url"
-                          name="repoUrl"
-                          value={customWorkspace.repoUrl}
-                          onChange={handleWorkspaceChange}
-                          placeholder="https://github.com/..."
-                          className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
-                        />
-                      </div>
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => setCopyStep("selection")}
-                          className="w-1/3 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:bg-white/5 py-2.5"
-                        >
-                          Back
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCopyStep("domainPopup")}
-                          disabled={
-                            !customWorkspace.siteName ||
-                            !customWorkspace.developerTitle
-                          }
-                          className={`w-2/3 rounded-xl text-xs font-bold py-2.5 transition disabled:opacity-40 disabled:cursor-not-allowed ${currentActiveTheme.accent}`}
-                        >
-                          Allocate System Domain
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {copyStep === "domainPopup" && (
-                    <div className="space-y-4 text-center py-2">
-                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/5 border border-white/10">
-                        <Globe size={20} className={currentActiveTheme.text} />
-                      </div>
-                      <h4 className="text-base font-bold tracking-tight">
-                        Claim Your Network Identity
-                      </h4>
-                      <p className="text-xs text-slate-400 max-w-xs mx-auto mt-0.5">
-                        Assign a secure subdomain prefix to route your compiled
-                        sandbox environment files.
-                      </p>
-                      <div className="max-w-xs mx-auto">
-                        <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden focus-within:border-slate-600 transition-colors">
-                          <input
-                            type="text"
-                            placeholder="your-workspace"
-                            className="w-full bg-transparent px-3 py-2 text-sm text-white focus:outline-none text-right placeholder-slate-600 font-medium"
-                            value={subdomain}
-                            onChange={(e) =>
-                              setSubdomain(
-                                e.target.value
-                                  .toLowerCase()
-                                  .replace(/\s+/g, "-")
-                                  .replace(/[^a-z0-9-]/g, ""),
-                              )
-                            }
-                          />
-                          <span className="bg-white/5 px-3 py-2 text-xs font-bold tracking-wide text-slate-400 border-l border-slate-800 shrink-0">
-                            .devhub.ng
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex justify-center gap-3 pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setCopyStep("manualForm")}
-                          className="px-5 py-2 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-white/5"
-                        >
-                          Back
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!subdomain}
-                          onClick={() => setCopyStep("integrations")}
-                          className={`px-6 py-2 text-xs font-bold rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed ${currentActiveTheme.accent}`}
-                        >
-                          Configure Contacts
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {copyStep === "integrations" && (
-                    <form
-                      onSubmit={handlePublishWorkspace}
-                      className="space-y-3 text-left animate-in fade-in zoom-in-95 duration-200"
-                    >
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                            WhatsApp Handle
-                          </label>
-                          <input
-                            type="text"
-                            name="whatsappHandle"
-                            value={integrationData.whatsappHandle}
-                            onChange={handleIntegrationChange}
-                            placeholder="e.g. +234..."
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                            Telegram Username
-                          </label>
-                          <input
-                            type="text"
-                            name="telegramHandle"
-                            value={integrationData.telegramHandle}
-                            onChange={handleIntegrationChange}
-                            placeholder="e.g. @username"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-600"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                          Sites Created / Collabs (Optional)
-                        </label>
-                        <textarea
-                          name="customSites"
-                          value={integrationData.customSites}
-                          onChange={handleIntegrationChange}
-                          rows={2}
-                          placeholder="Leave blank to use defaults..."
-                          className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-slate-600 resize-none"
-                        />
-                      </div>
-                      <div className="flex gap-3 pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setCopyStep("domainPopup")}
-                          className="w-1/3 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:bg-white/5 py-2.5"
-                        >
-                          Back
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className={`w-2/3 rounded-xl text-xs font-bold py-2.5 transition disabled:opacity-40 disabled:cursor-not-allowed ${currentActiveTheme.accent}`}
-                        >
-                          {isSubmitting
-                            ? "Publishing..."
-                            : "Upload & Publish Core"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              </div>
             )}
           </div>
         </div>
