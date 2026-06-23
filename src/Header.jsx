@@ -497,17 +497,18 @@ function Header({ profile }) {
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 pt-2">
+
+                <div className="grid grid-cols-3 gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setOption(null)}
-                    className="w-1/3 rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 text-xs sm:text-sm font-semibold text-gray-600 py-2 sm:py-2.5"
+                    className="rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 text-xs sm:text-sm font-semibold text-gray-600 py-2 sm:py-2.5"
                   >
                     Back
                   </button>
                   <button
                     type="submit"
-                    className="w-2/3 rounded-xl bg-purple-600 text-xs sm:text-sm font-semibold text-white hover:bg-purple-700 py-2 sm:py-2.5"
+                    className="col-span-2 rounded-xl bg-purple-600 text-xs sm:text-sm font-semibold text-white hover:bg-purple-700 py-2 sm:py-2.5"
                   >
                     Connect Messenger
                   </button>
@@ -520,5 +521,4 @@ function Header({ profile }) {
     </>
   );
 }
-
 export default Header;
