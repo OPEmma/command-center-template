@@ -191,7 +191,7 @@ function Header({ profile }) {
                 {/* Mobile Logout (Hidden on desktop, uses an icon to save space) */}
                 <button
                   onClick={handleLogout}
-                  className="sm:hidden p-2 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 dark:border-gray-700 dark:text-gray-400 transition-all active:scale-95"
+                  className="sm:hidden p-2 text-gray-400 hover:text-red-500 hover:border-red-200 dark:border-gray-700 dark:text-gray-400 transition-all active:scale-95"
                   aria-label="Logout"
                 >
                   <LogOut size={16} />
