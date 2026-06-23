@@ -7,6 +7,7 @@ import {
   Moon,
   LogIn,
   Mail,
+  LogOut,
   Link as LinkIcon, // Renamed to avoid collision with react-router Link if needed
 } from "lucide-react";
 
