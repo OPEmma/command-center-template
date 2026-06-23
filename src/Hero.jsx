@@ -7,7 +7,7 @@ import {
   Flame,
   Layers,
   LayoutGrid,
-  Link as LinkIcon,
+  Gauge,
 } from "lucide-react";
 
 const defaultProjectsData = [
@@ -82,11 +82,6 @@ function Hero() {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-  };
 
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);
@@ -206,26 +201,14 @@ function Hero() {
           </h1>
 
           {session ? (
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <button
-                onClick={() => {
-                  // If this element triggers a modal via header state,
-                  // pass down or dispatch an event here.
-                  window.dispatchEvent(new CustomEvent("open-connect-modal"));
-                }}
+            <div className="mt-6">
+              <Link
+                to="/dashboard"
                 className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-md font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
               >
-                <span>Connect</span>
-                <LinkIcon size={18} />
-              </button>
-
-              {/* Underlined Logout link right below the button with slightly larger text */}
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-400 dark:text-gray-500 underline decoration-gray-300 dark:decoration-gray-700 hover:text-red-500 transition-colors py-1"
-              >
-                \logout
-              </button>
+                <span>Dashboard</span>
+                <Gauge size={18} />
+              </Link>
             </div>
           ) : (
             <p className="mt-4 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
