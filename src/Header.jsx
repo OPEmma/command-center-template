@@ -172,24 +172,36 @@ function Header({ profile }) {
           </div>
 
           {/* AUTH BUTTONS */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {session ? (
               <>
-                <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">
+                <span className="hidden lg:block text-xs text-gray-500 dark:text-gray-400">
                   {session.user.email}
                 </span>
+
+                {/* Desktop Logout (Hidden on mobile) */}
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors hidden sm:block"
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors hidden sm:block px-1"
                 >
                   Logout
                 </button>
+
+                {/* Mobile Logout (Hidden on desktop, uses an icon to save space) */}
+                <button
+                  onClick={handleLogout}
+                  className="sm:hidden p-2 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 dark:border-gray-700 dark:text-gray-400 transition-all active:scale-95"
+                  aria-label="Logout"
+                >
+                  <LogOut size={16} />
+                </button>
+
                 <button
                   onClick={() => setIsOpen(true)}
-                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-2"
+                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2"
                 >
                   <span>Connect</span>
-                  <LinkIcon size={18} />
+                  <LinkIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </button>
               </>
             ) : (

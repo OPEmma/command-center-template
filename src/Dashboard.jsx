@@ -125,7 +125,7 @@ function Dashboard() {
           Workspace Dashboard
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">
-          Configure your portfolio and claim your subdomain.
+          Configure your site and claim your subdomain.
         </p>
 
         {/* EXPANDABLE THEME PALETTE */}
@@ -137,7 +137,7 @@ function Dashboard() {
                 Choose Your Theme
               </label>
             </div>
-            <span className="text-xs text-gray-400">{THEME_PALETTE.length} options</span>
+            <span className="text-xs text-gray-400">{THEME_PALETTE.length} themes </span>
           </div>
 
           {/* Category Pills */}
