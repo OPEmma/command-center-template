@@ -165,8 +165,8 @@ function Hero() {
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${
                 project.progress === 100
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-400"
-                  : "bg-gradient-to-r from-purple-600 to-indigo-500"
+                  ? "bg-linear-to-r from-emerald-500 to-teal-400"
+                  : "bg-linear-to-r from-purple-600 to-indigo-500"
               }`}
               style={{ width: `${project.progress}%` }}
             />
@@ -194,7 +194,7 @@ function Hero() {
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
             Live Development{" "}
-            <span className="bg-gradient-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
               Sprints
             </span>{" "}
             Center
@@ -204,7 +204,7 @@ function Hero() {
             <div className="mt-6">
               <Link
                 to="/dashboard"
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-md font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-m font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
               >
                 <span>Dashboard</span>
                 <Gauge size={18} />
