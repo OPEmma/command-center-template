@@ -384,11 +384,11 @@ function Dashboard() {
                   value={customWorkspace.siteName}
                   onChange={handleWorkspaceChange}
                   placeholder="OP Emma"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none pr-8"
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
                 />
                 <Cat
-                  size={13}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
                 />
               </div>
               <div>
