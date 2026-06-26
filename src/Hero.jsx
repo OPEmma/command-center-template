@@ -12,7 +12,7 @@ import {
 
 const defaultProjectsData = [
   {
-    id: 1,
+    id: "d1",
     title: "Trust Events Ltd",
     client: "Collaborated with Trust Events CEO",
     progress: 80,
@@ -22,7 +22,7 @@ const defaultProjectsData = [
     tags: ["React", "Tailwind", "Stripe"],
   },
   {
-    id: 2,
+    id: "d2",
     title: "Popcat",
     client: "Popcat.io",
     progress: 100,
@@ -32,7 +32,7 @@ const defaultProjectsData = [
     tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
   },
   {
-    id: 3,
+    id: "d3",
     title: " UniTrade × UI Student Union",
     client: "Collaborated with UI Student Union",
     progress: 85,
@@ -42,7 +42,7 @@ const defaultProjectsData = [
     tags: ["React", "PayStack", "Supabase"],
   },
   {
-    id: 4,
+    id: "d4",
     title: "THREE",
     client: "Collaborated with THREE",
     progress: 100,
@@ -52,7 +52,7 @@ const defaultProjectsData = [
     tags: ["React", "Three.js", "Framer", "Blender"],
   },
   {
-    id: 5,
+    id: "d5",
     title: "PyCon",
     client: "Collaborated with PyCon.co",
     progress: 100,
@@ -63,10 +63,17 @@ const defaultProjectsData = [
   },
 ];
 
-function Hero() {
+function Hero({ profile, customProjects = [], isSubdomain = false }) {
   const [session, setSession] = useState(null);
-  const [projects] = useState(defaultProjectsData);
   const [mobileFilter, setMobileFilter] = useState("all");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  // Resize window tracker setup
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Check if user is signed in
   useEffect(() => {
@@ -82,6 +89,10 @@ function Hero() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Determine active project rendering dataset: Use custom user uploads if they exist, otherwise fallback to filler data
+  const projects =
+    customProjects.length > 0 ? customProjects : defaultProjectsData;
 
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);
@@ -104,7 +115,7 @@ function Hero() {
     >
       <div className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
         <img
-          src={project.image}
+          src={project.image_url || project.image}
           alt={`${project.title} Interface view`}
           className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
@@ -121,13 +132,14 @@ function Hero() {
           ) : (
             <Layers size={12} />
           )}
-          {project.status}
+          {project.status ||
+            (project.progress === 100 ? "Completed" : "In Progress")}
         </div>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-3 flex flex-wrap gap-1.5">
-          {project.tags.map((tag, idx) => (
+          {(project.tags || []).map((tag, idx) => (
             <span
               key={idx}
               className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-gray-500 uppercase dark:bg-gray-800 dark:text-gray-400"
@@ -193,29 +205,28 @@ function Hero() {
             <span>Active Deployment Infrastructure Environment</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-            Live Development{" "}
+            {profile?.developer_name || "Live Development"}{" "}
             <span className="bg-linear-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
-              Sprints
+              {profile ? "Workspace" : "Sprints"}
             </span>{" "}
-            Center
+            {profile ? "" : "Center"}
           </h1>
 
-          {session ? (
+          <p className="mt-4 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
+            {profile?.bio ||
+              "Track live project metrics, fork layout structures, and preview functional client production pipelines instantly."}
+          </p>
+
+          {!isSubdomain && session && (
             <div className="mt-6">
               <Link
                 to="/dashboard"
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-m font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
               >
-                <span>Dashboard</span>
+                <span>Console Dashboard</span>
                 <Gauge size={18} />
               </Link>
             </div>
-          ) : (
-            <p className="mt-4 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
-              Track live project metrics, fork layout structures, and preview
-              functional client production pipelines instantly. Click code
-              modules to synchronize states seamlessly.
-            </p>
           )}
         </div>
 
@@ -225,61 +236,38 @@ function Hero() {
             <div className="flex items-center gap-2">
               <LayoutGrid size={20} className="text-purple-600" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Current Production Tracks
+                {customProjects.length > 0
+                  ? "Personal Built Projects"
+                  : "Current Production Tracks"}
               </h2>
             </div>
             <span className="hidden sm:block text-xs font-medium text-gray-400 dark:text-gray-500">
               Showing {projects.length} Active Engines
-            </span>
-            <span className="block sm:hidden text-xs font-medium text-gray-400 dark:text-gray-500">
-              {mobileFilteredProjects.length} Active
             </span>
           </div>
 
           {/* MOBILE FILTER TOGGLE */}
           <div className="flex sm:hidden w-full">
             <div className="inline-flex w-full rounded-full bg-gray-100 p-1.5 dark:bg-gray-800">
-              <button
-                onClick={() => setMobileFilter("all")}
-                className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 ${
-                  mobileFilter === "all"
-                    ? "bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setMobileFilter("in-progress")}
-                className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 ${
-                  mobileFilter === "in-progress"
-                    ? "bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setMobileFilter("completed")}
-                className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 ${
-                  mobileFilter === "completed"
-                    ? "bg-white text-emerald-600 shadow-sm dark:bg-gray-700 dark:text-emerald-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                Completed
-              </button>
+              {["all", "in-progress", "completed"].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setMobileFilter(filter)}
+                  className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 capitalize ${
+                    mobileFilter === filter
+                      ? "bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {filter.replace("-", " ")}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Desktop Grid Layout */}
-          <div className="hidden sm:grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => renderProjectCard(project))}
-          </div>
-
-          {/* Mobile Grid Layout */}
-          <div className="grid sm:hidden gap-6 grid-cols-1">
-            {mobileFilteredProjects.map((project) =>
+          {/* Desktop & Mobile Responsive Unified Grid Layout */}
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {(isMobile ? mobileFilteredProjects : projects).map((project) =>
               renderProjectCard(project),
             )}
           </div>

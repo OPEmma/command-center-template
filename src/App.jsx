@@ -20,6 +20,7 @@ const RESERVED_SUBDOMAINS = [
 function App() {
   const [subdomain, setSubdomain] = useState(null);
   const [profileData, setProfileData] = useState(null);
+  const [projectData, setProjectData] = useState([]); // Replaces selected_projects jsonb string
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -42,7 +43,7 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Check subdomain
+  // 2. Check subdomain parsing logic
   useEffect(() => {
     const host = window.location.hostname.toLowerCase().trim();
 
@@ -75,38 +76,54 @@ function App() {
     }
   }, []);
 
-  // 3. Fetch profile if subdomain
+  // 3. Fetch profile and relational custom projects if subdomain matches
   useEffect(() => {
     if (!subdomain) return;
 
-    async function fetchUserProfile() {
+    async function fetchUserProfileAndProjects() {
       try {
-        const { data, error: supabaseError } = await supabase
+        // Fetch Profile Matrix Details
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
-            "id, username, full_name, bio, whatsapp_number, telegram_handle, selected_projects",
+            "id, username, developer_name, bio, whatsapp_number, telegram_handle",
           )
           .eq("username", subdomain)
-          .single();
+          .maybeSingle(); // Prevents throwing hard unhandled errors if profile doesn't exist
 
-        if (supabaseError) throw supabaseError;
-        setProfileData(data);
+        if (profileError) throw profileError;
+
+        if (profile) {
+          setProfileData(profile);
+
+          // Query relational projects via user_id foreign key reference
+          const { data: projects, error: projectsError } = await supabase
+            .from("projects")
+            .select("*")
+            .eq("user_id", profile.id)
+            .order("created_at", { ascending: false });
+
+          if (projectsError) throw projectsError;
+          setProjectData(projects || []);
+        }
       } catch (err) {
-        console.error("Error loading profile:", err);
+        console.error("Error loading profile setup environment:", err);
         setError("Failed to load profile settings.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchUserProfile();
+    fetchUserProfileAndProjects();
   }, [subdomain]);
 
-  // Loading state
+  // Loading state container configuration
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-        <p className="text-gray-500 dark:text-gray-400">Loading layout...</p>
+        <p className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">
+          Loading custom platform environment...
+        </p>
       </div>
     );
   }
@@ -114,22 +131,25 @@ function App() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-        <p className="text-red-500">{error}</p>
+        <p className="text-red-500 font-semibold">{error}</p>
       </div>
     );
   }
 
-  // ROUTE A: Public subdomain view
+  // ROUTE A: Public subdomain customized portfolio pipeline view
   if (subdomain) {
     if (!profileData) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-6xl font-black text-purple-600 dark:text-purple-500">
               404
             </h1>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
-              Developer Profile Not Found!
+            <p className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
+              Workspace Not Found
+            </p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              The developer path configuration requested hasn't been claimed.
             </p>
           </div>
         </div>
@@ -137,25 +157,19 @@ function App() {
     }
 
     return (
-      <div className="profile-template min-h-screen bg-gray-50 dark:bg-gray-950">
-        <header className="p-8 bg-gray-900 text-white">
-          <h1 className="text-3xl font-bold">
-            {profileData.full_name || subdomain}'s Live Site
-          </h1>
-          <p className="mt-2 text-gray-400">
-            {profileData.bio || "Welcome to my space."}
-          </p>
-          {profileData.whatsapp_number && (
-            <p className="mt-4 text-green-400">
-              Contact: {profileData.whatsapp_number}
-            </p>
-          )}
-        </header>
+      <div className="relative min-h-screen bg-white dark:bg-gray-950">
+        {/* We pass down database values right into your custom view templates */}
+        <Header profile={profileData} />
+        <Hero
+          profile={profileData}
+          customProjects={projectData}
+          isSubdomain={true}
+        />
       </div>
     );
   }
 
-  // ROUTE B: Main app with React Router
+  // ROUTE B: Main registration root app landing environment with React Router
   return (
     <BrowserRouter>
       <Routes>
@@ -164,8 +178,8 @@ function App() {
           path="/"
           element={
             <div className="relative min-h-screen bg-white dark:bg-gray-950">
-              <Header profile={profileData} />
-              <Hero profile={profileData} />
+              <Header profile={null} />
+              <Hero profile={null} customProjects={[]} isSubdomain={false} />
             </div>
           }
         />

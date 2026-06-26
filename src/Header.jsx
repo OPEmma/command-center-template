@@ -8,44 +8,9 @@ import {
   LogIn,
   Mail,
   LogOut,
-  Link as LinkIcon, // Renamed to avoid collision with react-router Link if needed
+  LayoutDashboard,
+  Link as LinkIcon,
 } from "lucide-react";
-
-const EXCLUSIVE_THEMES = {
-  cyberPurple: {
-    name: "Cyber Purple",
-    bg: "from-purple-950/90 to-slate-950/95",
-    border: "border-purple-500/30",
-    accent: "bg-purple-600 hover:bg-purple-500 shadow-purple-500/20 text-white",
-    text: "text-purple-400",
-    pill: "bg-purple-500/10 text-purple-300 border-purple-500/20",
-  },
-  neonMatrix: {
-    name: "Emerald Matrix",
-    bg: "from-emerald-950/90 to-zinc-950/95",
-    border: "border-emerald-500/30",
-    accent:
-      "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20 text-white",
-    text: "text-emerald-400",
-    pill: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  },
-  solarFlare: {
-    name: "Solar Flare",
-    bg: "from-amber-950/90 to-stone-950/95",
-    border: "border-amber-500/30",
-    accent: "bg-amber-600 hover:bg-amber-500 shadow-amber-500/20 text-white",
-    text: "text-amber-400",
-    pill: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  },
-  deepOcean: {
-    name: "Abyssal Blue",
-    bg: "from-blue-950/90 to-gray-950/95",
-    border: "border-blue-500/30",
-    accent: "bg-blue-600 hover:bg-blue-500 shadow-blue-500/20 text-white",
-    text: "text-blue-400",
-    pill: "bg-blue-500/10 text-blue-300 border-blue-500/20",
-  },
-};
 
 function Header({ profile }) {
   const [session, setSession] = useState(null);
@@ -54,16 +19,17 @@ function Header({ profile }) {
   const [authError, setAuthError] = useState("");
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState("cyberPurple");
+  const [isAuthModal, setIsAuthModal] = useState(false); // Separated Auth vs Connect contexts
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
   });
 
-  const YOUR_WHATSAPP_NUMBER = profile?.whatsapp || "2348060110195";
+  const WHATSAPP_TARGET = profile?.whatsapp_number || "2348060110195";
   const [theme, setTheme] = useState("light");
 
+  // Listen to Auth State changes & catch incoming window actions globally
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -75,7 +41,17 @@ function Header({ profile }) {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    const handleOpenAuth = () => {
+      setIsAuthModal(true);
+      setIsOpen(true);
+    };
+
+    window.addEventListener("open-connect-modal", handleOpenAuth);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("open-connect-modal", handleOpenAuth);
+    };
   }, []);
 
   const handleEmailSignIn = async (e) => {
@@ -95,6 +71,7 @@ function Header({ profile }) {
 
       alert("Verification link sent! Check your email to sign in.");
       setAuthEmail("");
+      setIsOpen(false);
     } catch (error) {
       setAuthError(error.message);
     } finally {
@@ -123,27 +100,41 @@ function Header({ profile }) {
     const encodedMessage = encodeURIComponent(message);
 
     window.open(
-      `https://wa.me/${YOUR_WHATSAPP_NUMBER}?text=${encodedMessage}`,
+      `https://wa.me/${WHATSAPP_TARGET}?text=${encodedMessage}`,
       "_blank",
     );
 
     setIsOpen(false);
   };
 
+  // Compute Brand Layout Title matching active profile row
+  const brandName = profile?.developer_name || profile?.username || "DevHub";
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-purple-100 bg-white/80 backdrop-blur-md transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          {/* Logo Context Layout */}
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-purple-600 p-2 text-white">
               <Layers size={20} />
             </div>
-            <span className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 transition-colors duration-300 dark:text-white">
-              Dev<span className="text-purple-600">Hub</span>
-            </span>
+            <a
+              href="/"
+              className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 transition-colors duration-300 dark:text-white"
+            >
+              {profile ? (
+                brandName
+              ) : (
+                <>
+                  Dev<span className="text-purple-600">Hub</span>
+                </>
+              )}
+            </a>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            {/* Theme Toggle Utility */}
             <button
               onClick={toggleTheme}
               className="group relative flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 overflow-hidden rounded-xl border bg-gray-50 px-2.5 sm:px-4 text-gray-600 transition-all duration-300 hover:text-purple-600 hover:border-purple-300 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-purple-400"
@@ -157,68 +148,72 @@ function Header({ profile }) {
                 size={16}
                 className={`relative transition-all duration-500 ${theme === "light" ? "rotate-90 scale-0 opacity-0 absolute" : "rotate-0 scale-100 opacity-100"}`}
               />
-              <span className="hidden sm:block relative overflow-hidden">
-                <span
-                  className={`block text-xs font-medium transition-all duration-500 ${theme === "dark" ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}
-                >
-                  Light
-                </span>
-                <span
-                  className={`absolute inset-0 text-xs font-medium transition-all duration-500 ${theme === "light" ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}
-                >
-                  Dark
-                </span>
+              <span className="hidden sm:block relative overflow-hidden text-xs font-medium">
+                {theme === "dark" ? "Dark" : "Light"}
               </span>
             </button>
-          </div>
 
-          {/* AUTH BUTTONS */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {session ? (
-              <>
-                <span className="hidden lg:block text-xs text-gray-500 dark:text-gray-400">
-                  {session.user.email}
-                </span>
+            {/* Session Management Call to Actions */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {session ? (
+                <>
+                  <span className="hidden lg:block text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    {session.user.email}
+                  </span>
 
-                {/* Desktop Logout (Hidden on mobile) */}
+                  {/* Dynamic Workspace Control Center Console Link */}
+                  <a
+                    href={`${window.location.origin}/dashboard`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 px-3 py-2 text-xs font-semibold text-purple-700 dark:text-purple-400 hover:opacity-90 transition-all"
+                  >
+                    <LayoutDashboard size={14} />
+                    <span className="hidden sm:inline">Console</span>
+                  </a>
+
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors hidden sm:block px-1 font-medium"
+                  >
+                    Logout
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="sm:hidden p-2 text-gray-400 hover:text-red-500 transition-all"
+                    aria-label="Logout"
+                  >
+                    <LogOut size={16} />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsAuthModal(false);
+                      setIsOpen(true);
+                    }}
+                    className="rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5"
+                  >
+                    <span>Connect</span>
+                    <LinkIcon size={14} />
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors hidden sm:block px-1"
+                  onClick={() => {
+                    setIsAuthModal(true);
+                    setIsOpen(true);
+                  }}
+                  className="rounded-xl bg-purple-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95"
                 >
-                  Logout
+                  Get Started
                 </button>
-
-                {/* Mobile Logout (Hidden on desktop, uses an icon to save space) */}
-                <button
-                  onClick={handleLogout}
-                  className="sm:hidden p-2 text-gray-400 hover:text-red-500 hover:border-red-200 dark:border-gray-700 dark:text-gray-400 transition-all active:scale-95"
-                  aria-label="Logout"
-                >
-                  <LogOut size={16} />
-                </button>
-
-                <button
-                  onClick={() => setIsOpen(true)}
-                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2"
-                >
-                  <span>Connect</span>
-                  <LinkIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsOpen(true)}
-                className="rounded-xl bg-purple-600 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95"
-              >
-                Get Started
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* AUTH MODAL (WHEN NOT LOGGED IN) */}
-      {isOpen && !session && (
+      {/* AUTH PIPELINE MODAL */}
+      {isOpen && isAuthModal && !session && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
           <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
             <button
@@ -236,21 +231,19 @@ function Header({ profile }) {
                 Sign in to DevHub
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                No passwords — just enter your email.
+                No passwords required — just enter your email.
               </p>
             </div>
 
             <form onSubmit={handleEmailSignIn} className="space-y-3">
-              <div>
-                <input
-                  type="email"
-                  required
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
-                />
-              </div>
+              <input
+                type="email"
+                required
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+              />
 
               {authError && (
                 <p className="text-red-500 text-xs text-center">{authError}</p>
@@ -265,21 +258,17 @@ function Header({ profile }) {
                 {authLoading ? "Sending link..." : "Send Verification Link"}
               </button>
             </form>
-
-            <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-4">
-              We'll email you a one-click login link. No password needed.
-            </p>
           </div>
         </div>
       )}
 
-      {/* CONNECT MODAL (WHEN LOGGED IN) */}
-      {isOpen && session && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border bg-gradient-to-br bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800 p-5 sm:p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95">
+      {/* WHATSAPP COMMUNICATIONS ROUTER MODAL */}
+      {isOpen && (!isAuthModal || session) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-xl rounded-2xl border bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800 p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95">
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="absolute right-4 top-4 p-1 text-gray-400 hover:text-gray-600"
             >
               <X size={18} />
             </button>
@@ -290,13 +279,12 @@ function Header({ profile }) {
                   Connect Messenger
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                  Provide your brief info to route directly via WhatsApp or
-                  Telegram.
+                  Route conversations instantly via secure webhook pipelines.
                 </p>
               </div>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
                     Full Name
                   </label>
                   <input
@@ -306,11 +294,11 @@ function Header({ profile }) {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="John Doe"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 sm:px-4 py-2 sm:py-2.5 text-sm focus:border-purple-500 focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
                     Email Address
                   </label>
                   <input
@@ -320,7 +308,7 @@ function Header({ profile }) {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="john@example.com"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 sm:px-4 py-2 sm:py-2.5 text-sm focus:border-purple-500 focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -329,13 +317,13 @@ function Header({ profile }) {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 text-xs sm:text-sm font-semibold text-gray-600 py-2 sm:py-2.5"
+                  className="rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 text-xs sm:text-sm font-semibold py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="col-span-2 rounded-xl bg-purple-600 text-xs sm:text-sm font-semibold text-white hover:bg-purple-700 py-2 sm:py-2.5"
+                  className="col-span-2 rounded-xl bg-purple-600 text-xs sm:text-sm font-semibold text-white hover:bg-purple-700 py-2.5"
                 >
                   Connect Messenger
                 </button>
@@ -347,4 +335,5 @@ function Header({ profile }) {
     </>
   );
 }
+
 export default Header;
