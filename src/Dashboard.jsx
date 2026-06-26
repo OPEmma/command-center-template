@@ -376,23 +376,25 @@ function Dashboard() {
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
-            <label className="flex text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              Professional's/Dev Name
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  name="siteName"
-                  value={customWorkspace.siteName}
-                  onChange={handleWorkspaceChange}
-                  placeholder="OP Emma"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
-                />
-                <Cat
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Professional's/Dev Name
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    name="siteName"
+                    value={customWorkspace.siteName}
+                    onChange={handleWorkspaceChange}
+                    placeholder="OP Emma"
+                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                  <Cat
+                    size={16}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
