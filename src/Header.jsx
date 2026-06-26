@@ -162,13 +162,6 @@ function Header({ profile }) {
                   </span>
 
                   {/* Dynamic Workspace Control Center Console Link */}
-                  <a
-                    href={`${window.location.origin}/dashboard`}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 px-3 py-2 text-xs font-semibold text-purple-700 dark:text-purple-400 hover:opacity-90 transition-all"
-                  >
-                    <LayoutDashboard size={14} />
-                    <span className="hidden sm:inline">Console</span>
-                  </a>
 
                   <button
                     onClick={handleLogout}
