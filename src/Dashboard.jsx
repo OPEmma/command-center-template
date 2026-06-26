@@ -376,11 +376,11 @@ function Dashboard() {
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
+            <label className="flex text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Professional's/Dev Name
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative flex items-center">
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Professional's/Dev Name
-                </label>
                 <input
                   type="text"
                   name="siteName"
