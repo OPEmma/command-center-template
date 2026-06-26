@@ -11,6 +11,7 @@ import {
   ChevronUp,
   ExternalLink,
   CheckCircle,
+  Cat,
 } from "lucide-react";
 
 const THEME_PALETTE = [
@@ -376,17 +377,18 @@ function Dashboard() {
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Developer Name
-                </label>
+              <div className="relative">
                 <input
                   type="text"
                   name="siteName"
                   value={customWorkspace.siteName}
                   onChange={handleWorkspaceChange}
-                  placeholder="Emma Nwoke"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  placeholder="OP Emma"
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none pr-8"
+                />
+                <Cat
+                  size={13}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 />
               </div>
               <div>
@@ -398,7 +400,7 @@ function Dashboard() {
                   name="developerTitle"
                   value={customWorkspace.developerTitle}
                   onChange={handleWorkspaceChange}
-                  placeholder="Fullstack DevOps Architect"
+                  placeholder="Lead Engineer"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
                 />
               </div>
@@ -450,7 +452,7 @@ function Dashboard() {
             <div className="max-w-xs mx-auto flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <input
                 type="text"
-                placeholder="your-username"
+                placeholder="your-subdomain"
                 className="w-full bg-transparent px-3 py-2 text-sm text-right focus:outline-none dark:text-white"
                 value={subdomain}
                 onChange={(e) =>
