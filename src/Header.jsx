@@ -112,7 +112,7 @@ function Header({ profile }) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-purple-100 bg-white/80 backdrop-blur-md transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900/80">
+      <header className="sticky top-0 z-50 w-full overflow-x-hidden border-b border-purple-100 bg-white/80 backdrop-blur-md transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* Logo Context Layout */}
           <div className="flex items-center gap-2">

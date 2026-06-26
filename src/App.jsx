@@ -157,7 +157,7 @@ function App() {
     }
 
     return (
-      <div className="relative min-h-screen bg-white dark:bg-gray-950">
+      <div className="relative min-h-screen overflow-x-hidden bg-white dark:bg-gray-950">
         {/* We pass down database values right into your custom view templates */}
         <Header profile={profileData} />
         <Hero
