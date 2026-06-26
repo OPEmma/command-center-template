@@ -196,7 +196,7 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
   );
 
   return (
-    <main className="min-w-full bg-gray-50 px-6 py-12 transition-colors duration-300 dark:bg-gray-950 md:py-20">
+    <main className="w-full bg-gray-50 px-6 py-12 transition-colors duration-300 dark:bg-gray-950 md:py-20">
       <div className="mx-auto max-w-7xl space-y-16">
         {/* HERO HEADER SECTION */}
         <div className="text-center md:mx-auto md:max-w-3xl">
