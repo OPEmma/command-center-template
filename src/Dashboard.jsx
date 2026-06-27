@@ -177,8 +177,10 @@ function Dashboard() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("profiles").insert([
+      // Changed .insert() to .upsert() and included the target 'id' to map uniquely
+      const { error } = await supabase.from("profiles").upsert([
         {
+          id: session?.user?.id,
           username: cleanSubdomain,
           developer_name: customWorkspace.siteName,
           bio: customWorkspace.developerTitle,
@@ -410,19 +412,7 @@ function Dashboard() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Repo URL (Optional)
-              </label>
-              <input
-                type="url"
-                name="repoUrl"
-                value={customWorkspace.repoUrl}
-                onChange={handleWorkspaceChange}
-                placeholder="https://github.com/..."
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
-              />
-            </div>
+
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setCopyStep("selection")}
@@ -502,7 +492,7 @@ function Dashboard() {
               onSubmit={handlePublishWorkspace}
               className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800"
             >
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     WhatsApp
