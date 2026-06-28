@@ -129,8 +129,8 @@ function Header({ profile }) {
             </a>
           </div>
 
-          {/* Cleaned layout: The 3-Column Actions Container */}
-          <div className="grid grid-cols-3 items-center gap-2 sm:gap-3 w-48 sm:w-72 md:w-80 justify-items-stretch">
+          {/* FIXED: Added specific widths for different screens to allow columns to expand cleanly */}
+          <div className="grid grid-cols-3 items-center gap-2 sm:gap-4 w-56 sm:w-80 md:w-96 justify-items-stretch">
             {/* Column 1: Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -184,7 +184,7 @@ function Header({ profile }) {
                     setIsAuthModal(false);
                     setIsOpen(true);
                   }}
-                  className="w-full justify-center rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2"
+                  className="w-full justify-center rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2"
                 >
                   <span className="truncate">Connect</span>
                   <LinkIcon size={14} className="shrink-0" />
