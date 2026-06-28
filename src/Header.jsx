@@ -306,7 +306,7 @@ function Header({ profile }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-2">
+              <div className="grid grid-cols-1 gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
