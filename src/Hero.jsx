@@ -187,7 +187,6 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
 
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400">
-            <span>Launch Preview</span>
             <ExternalLink size={12} />
           </div>
         </div>
