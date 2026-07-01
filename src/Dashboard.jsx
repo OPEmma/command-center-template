@@ -12,6 +12,7 @@ import {
   ExternalLink,
   CheckCircle,
   Cat,
+  Code2
 } from "lucide-react";
 
 const THEME_PALETTE = [
@@ -390,7 +391,7 @@ function Dashboard() {
                     : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
-                <Copy size={14} /> {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
+                <Code2 size={17} /> {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
               </button>
               <button
                 onClick={() => setCopyStep("manualForm")}
