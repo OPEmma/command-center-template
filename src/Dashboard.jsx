@@ -12,7 +12,8 @@ import {
   ExternalLink,
   CheckCircle,
   Cat,
-  Code2
+  Code2,
+  Trash2,
 } from "lucide-react";
 
 const THEME_PALETTE = [
@@ -116,6 +117,7 @@ const RESERVED_SUBDOMAINS = [
 function Dashboard() {
   const [session, setSession] = useState(null);
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
+  const [hasLiveSite, setHasLiveSite] = useState(false);
   const [copyStep, setCopyStep] = useState("selection"); // 'selection', 'manualForm', 'domainPopup', 'integrations', 'success'
   const [selectedTheme, setSelectedTheme] = useState("Cyber Purple");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,6 +131,7 @@ function Dashboard() {
     siteName: "",
     developerTitle: "",
     repoUrl: "",
+    sitePictureUrl: "", // Added support for custom site profile image state mapping
   });
   const [integrationData, setIntegrationData] = useState({
     whatsappHandle: "",
@@ -150,15 +153,41 @@ function Dashboard() {
       if (!session) {
         window.location.href = "/";
       } else {
-        // Fetch profile to see if github repo is already configured
+        // Fetch profile configuration map definitions
         const { data } = await supabase
           .from("profiles")
-          .select("github_repo_url")
+          .select(
+            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects, theme_preference, avatar_url",
+          )
           .eq("id", session.user.id)
           .maybeSingle();
-        
-        if (data?.github_repo_url) {
-          setGithubRepoUrl(data.github_repo_url);
+
+        if (data) {
+          if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
+          if (data.username) {
+            setSubdomain(data.username);
+            setPublishedUrl(`https://${data.username}.devhub.ng`);
+            setHasLiveSite(true); // Flag active profile live status matching state controls
+          }
+          // Prepopulate fields dynamically if data records exist
+          setCustomWorkspace({
+            siteName: data.developer_name || "",
+            developerTitle: data.bio || "",
+            repoUrl: data.github_repo_url || "",
+            sitePictureUrl: data.avatar_url || "",
+          });
+          setIntegrationData({
+            whatsappHandle: data.whatsapp_number || "",
+            telegramHandle: data.telegram_handle || "",
+          });
+          if (data.selected_projects) {
+            try {
+              setCustomProjectsList(JSON.parse(data.selected_projects));
+            } catch (e) {
+              setCustomProjectsList([]);
+            }
+          }
+          if (data.theme_preference) setSelectedTheme(data.theme_preference);
         }
       }
     });
@@ -169,10 +198,9 @@ function Dashboard() {
       alert("Please log in before connecting your GitHub account.");
       return;
     }
-    
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectUri = "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
-    
+    const redirectUri =
+      "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${session.user.id}`;
   };
 
@@ -184,8 +212,25 @@ function Dashboard() {
     setIntegrationData({ ...integrationData, [e.target.name]: e.target.value });
   };
 
+  const handleDeleteCard = () => {
+    if (
+      confirm(
+        "Are you absolute sure you want to completely clear out your workspace dynamic configurations? This will reset form fields.",
+      )
+    ) {
+      setCustomWorkspace({
+        siteName: "",
+        developerTitle: "",
+        repoUrl: "",
+        sitePictureUrl: "",
+      });
+      setIntegrationData({ whatsappHandle: "", telegramHandle: "" });
+      setCustomProjectsList([]);
+    }
+  };
+
   const handlePublishWorkspace = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const cleanSubdomain = subdomain.toLowerCase().trim();
 
     if (!cleanSubdomain) {
@@ -193,7 +238,7 @@ function Dashboard() {
       return;
     }
 
-    if (RESERVED_SUBDOMAINS.includes(cleanSubdomain)) {
+    if (!hasLiveSite && RESERVED_SUBDOMAINS.includes(cleanSubdomain)) {
       alert(
         `"${cleanSubdomain}" is a protected system domain configuration phrase. Please pick another name.`,
       );
@@ -213,6 +258,7 @@ function Dashboard() {
           telegram_handle: integrationData.telegramHandle,
           selected_projects: JSON.stringify(customProjectsList),
           theme_preference: selectedTheme,
+          avatar_url: customWorkspace.sitePictureUrl,
         },
       ]);
 
@@ -226,6 +272,7 @@ function Dashboard() {
       }
 
       setPublishedUrl(`https://${cleanSubdomain}.devhub.ng`);
+      setHasLiveSite(true);
       setCopyStep("success");
     } catch (error) {
       alert(error.message || "Error saving profile configuration.");
@@ -251,7 +298,9 @@ function Dashboard() {
               Workspace Dashboard
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Configure your site and claim your subdomain.
+              {hasLiveSite
+                ? "Manage your production engine properties."
+                : "Configure your site and claim your subdomain."}
             </p>
 
             {/* EXPANDABLE THEME PALETTE */}
@@ -264,7 +313,7 @@ function Dashboard() {
                   </label>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {THEME_PALETTE.length} themes{" "}
+                  {THEME_PALETTE.length} themes
                 </span>
               </div>
 
@@ -365,8 +414,9 @@ function Dashboard() {
         {copyStep === "selection" && (
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">
-                Package Manifest Bundle Contents:
+              <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                <Code2 size={16} className="text-purple-500" /> Package Manifest
+                Bundle Contents:
               </p>
               <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
                 <li>
@@ -391,13 +441,17 @@ function Dashboard() {
                     : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
-                <Code2 size={17} /> {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
+                <Copy size={14} />{" "}
+                {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
               </button>
+
+              {/* DYNAMIC PARAMETER CONFIGURATION TABS FOR LIVE SITES */}
               <button
                 onClick={() => setCopyStep("manualForm")}
                 className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
               >
-                Type Parameters <ArrowRight size={14} />
+                {hasLiveSite ? "Update Live Site" : "Type Parameters"}{" "}
+                <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -405,6 +459,20 @@ function Dashboard() {
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                Workspace Configuration Core Parameters
+              </h3>
+              <button
+                type="button"
+                onClick={handleDeleteCard}
+                className="p-1.5 text-gray-400 hover:text-red-500 transition rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+                title="Reset Form Data"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -420,8 +488,8 @@ function Dashboard() {
                     className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
                   />
                   <Cat
-                    size={16}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
+                    size={16}
                   />
                 </div>
               </div>
@@ -440,6 +508,21 @@ function Dashboard() {
               </div>
             </div>
 
+            {/* EXPANDED FIELDS FOR CMS CONTROLS */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Site Profile Picture URL
+              </label>
+              <input
+                type="url"
+                name="sitePictureUrl"
+                value={customWorkspace.sitePictureUrl}
+                onChange={handleWorkspaceChange}
+                placeholder="https://images.unsplash.com/... or github avatar link"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setCopyStep("selection")}
@@ -448,13 +531,17 @@ function Dashboard() {
                 Back
               </button>
               <button
-                onClick={() => setCopyStep("domainPopup")}
+                onClick={() =>
+                  hasLiveSite
+                    ? setCopyStep("integrations")
+                    : setCopyStep("domainPopup")
+                }
                 disabled={
                   !customWorkspace.siteName || !customWorkspace.developerTitle
                 }
                 className="w-2/3 rounded-lg bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 py-2.5 disabled:opacity-40"
               >
-                Allocate Domain
+                {hasLiveSite ? "Configure Core Extensions" : "Allocate Domain"}
               </button>
             </div>
           </div>
@@ -511,6 +598,7 @@ function Dashboard() {
         {copyStep === "integrations" && (
           <div className="space-y-6">
             <ProjectManager
+              initialProjects={customProjectsList}
               onProjectsChange={(list) => setCustomProjectsList(list)}
             />
 
@@ -521,7 +609,7 @@ function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    WhatsApp
+                    WhatsApp Link / Number
                   </label>
                   <input
                     type="text"
@@ -534,7 +622,7 @@ function Dashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    Telegram
+                    Telegram Handle
                   </label>
                   <input
                     type="text"
@@ -550,7 +638,7 @@ function Dashboard() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setCopyStep("domainPopup")}
+                  onClick={() => setCopyStep("manualForm")}
                   className="w-1/3 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-300 py-2.5"
                 >
                   Back
@@ -560,7 +648,11 @@ function Dashboard() {
                   disabled={isSubmitting}
                   className="w-2/3 rounded-lg bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 py-2.5 disabled:opacity-40"
                 >
-                  {isSubmitting ? "Publishing..." : "Upload & Publish Core"}
+                  {isSubmitting
+                    ? "Syncing..."
+                    : hasLiveSite
+                      ? "Sync Structural Updates"
+                      : "Upload & Publish Core"}
                 </button>
               </div>
             </form>
@@ -575,12 +667,11 @@ function Dashboard() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-black text-gray-900 dark:text-white">
-                Portfolio is Live!
+                Portfolio Synced!
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Your deployment core engine has systematically provisioned
-                resources seamlessly. Your workspace is online at your newly
-                mapped target sub-route destination.
+                Your deployment core engine has systematically updated and
+                pushed changes out live to your mapped domain destination space.
               </p>
             </div>
 
@@ -600,10 +691,10 @@ function Dashboard() {
 
             <div className="pt-4">
               <button
-                onClick={() => window.location.reload()}
-                className="text-xs text-gray-400 hover:text-gray-600 underline"
+                onClick={() => setCopyStep("selection")}
+                className="text-xs text-gray-400 hover:text-purple-600 underline"
               >
-                Configure Another Environment
+                Return to Workspace Root
               </button>
             </div>
           </div>
