@@ -153,11 +153,11 @@ function Dashboard() {
       if (!session) {
         window.location.href = "/";
       } else {
-        // Safe selection query: removing potential missing columns for stability
+        // Safe selection query: explicitly removed github_repo_url to fix schema mismatch crash
         const { data, error } = await supabase
           .from("profiles")
           .select(
-            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
+            "username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
           )
           .eq("id", session.user.id)
           .maybeSingle();
@@ -167,8 +167,6 @@ function Dashboard() {
         }
 
         if (data) {
-          if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
-
           // This is the core check that triggers the "Update Live Site" view!
           if (data.username && data.username.trim() !== "") {
             setSubdomain(data.username);
@@ -179,7 +177,7 @@ function Dashboard() {
           setCustomWorkspace({
             siteName: data.developer_name || "",
             developerTitle: data.bio || "",
-            repoUrl: data.github_repo_url || "",
+            repoUrl: "",
             sitePictureUrl: data.avatar_url || "", // safely fallbacks to blank if missing
           });
 
