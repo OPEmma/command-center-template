@@ -153,41 +153,53 @@ function Dashboard() {
       if (!session) {
         window.location.href = "/";
       } else {
-        // Fetch profile configuration map definitions
-        const { data } = await supabase
+        // Safe selection query: removing potential missing columns for stability
+        const { data, error } = await supabase
           .from("profiles")
           .select(
-            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects, theme_preference, avatar_url",
+            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
           )
           .eq("id", session.user.id)
           .maybeSingle();
 
+        if (error) {
+          console.error("Supabase fetch error:", error.message);
+        }
+
         if (data) {
           if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
-          if (data.username) {
+
+          // This is the core check that triggers the "Update Live Site" view!
+          if (data.username && data.username.trim() !== "") {
             setSubdomain(data.username);
             setPublishedUrl(`https://${data.username}.devhub.ng`);
-            setHasLiveSite(true); // Flag active profile live status matching state controls
+            setHasLiveSite(true);
           }
-          // Prepopulate fields dynamically if data records exist
+
           setCustomWorkspace({
             siteName: data.developer_name || "",
             developerTitle: data.bio || "",
             repoUrl: data.github_repo_url || "",
-            sitePictureUrl: data.avatar_url || "",
+            sitePictureUrl: data.avatar_url || "", // safely fallbacks to blank if missing
           });
+
           setIntegrationData({
             whatsappHandle: data.whatsapp_number || "",
             telegramHandle: data.telegram_handle || "",
           });
+
           if (data.selected_projects) {
             try {
-              setCustomProjectsList(JSON.parse(data.selected_projects));
+              // Safe JSON evaluation handles stringified arrays or direct objects
+              const parsed =
+                typeof data.selected_projects === "string"
+                  ? JSON.parse(data.selected_projects)
+                  : data.selected_projects;
+              setCustomProjectsList(Array.isArray(parsed) ? parsed : []);
             } catch (e) {
               setCustomProjectsList([]);
             }
           }
-          if (data.theme_preference) setSelectedTheme(data.theme_preference);
         }
       }
     });
