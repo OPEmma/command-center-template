@@ -611,7 +611,6 @@ function Dashboard() {
               initialProjects={customProjectsList}
               onProjectsChange={(list) => setCustomProjectsList(list)}
             />
-
             <form
               onSubmit={handlePublishWorkspace}
               className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Minus,
   Plus,
@@ -21,9 +21,34 @@ const AVAILABLE_TAGS = [
   "Framer",
 ];
 
-export default function ProjectManager({ onProjectsChange }) {
-  const [projects, setProjects] = useState([]);
+const DEFAULT_PRESET_PROJECTS = [
+  {
+    id: "default-1",
+    title: "App",
+    client: "Chess Platform",
+    progress: 85,
+    url: "chess.com",
+    tags: ["React", "Tailwind", "Node.js"],
+  },
+];
+
+export default function ProjectManager({ initialProjects, onProjectsChange }) {
+  // 1. Check if the user genuinely has an entry in the database (even an empty array means they initialized it)
+  const hasCustomData =
+    initialProjects !== undefined && initialProjects !== null;
+
+  // 2. Fallback to default presets ONLY if initialProjects is completely missing/undefined
+  const [projects, setProjects] = useState(() =>
+    hasCustomData ? initialProjects : DEFAULT_PRESET_PROJECTS,
+  );
   const [showForm, setShowForm] = useState(false);
+
+  // 3. Keep database updates in sync cleanly
+  useEffect(() => {
+    if (hasCustomData) {
+      setProjects(initialProjects);
+    }
+  }, [initialProjects]);
 
   // Single Project Core Formulation State
   const [newProject, setNewProject] = useState({
@@ -64,8 +89,15 @@ export default function ProjectManager({ onProjectsChange }) {
       return;
     }
 
+    // Filter out defaults if we are appending a fresh custom item
+    const baseProjects = projects.some((p) =>
+      p.id.toString().startsWith("default-"),
+    )
+      ? []
+      : projects;
+
     const updated = [
-      ...projects,
+      ...baseProjects,
       {
         ...newProject,
         id: `user-proj-${Date.now()}`,
@@ -88,8 +120,11 @@ export default function ProjectManager({ onProjectsChange }) {
     setShowForm(false);
   };
 
+  // CORRECT SELECTION FUNCTION (Duplicates removed)
   const handleRemoveProject = (id) => {
     const updated = projects.filter((p) => p.id !== id);
+
+    // Keep it empty if they cleared everything, no platform defaults forcing themselves back.
     setProjects(updated);
     onProjectsChange(updated);
   };
@@ -234,50 +269,41 @@ export default function ProjectManager({ onProjectsChange }) {
       </div>
 
       {/* ACTIVE USER PROJECTS ROW PREVIEW TRACKER */}
-      {projects.length === 0 ? (
-        <div className="text-center py-6 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl">
-          <p className="text-xs text-gray-400">
-            No personal track uploads added yet. System defaults will render on
-            build.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {projects.map((proj) => (
-            <div
-              key={proj.id}
-              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950/40 border border-gray-100 dark:border-gray-900 rounded-xl"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`h-8 w-8 rounded-lg flex items-center justify-center text-white ${proj.progress === 100 ? "bg-emerald-500" : "bg-purple-600"}`}
-                >
-                  {proj.progress === 100 ? (
-                    <CheckCircle size={14} />
-                  ) : (
-                    <Flame size={14} />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                    {proj.title}
-                  </p>
-                  <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                    {proj.url} <ExternalLink size={8} />
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRemoveProject(proj.id)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+      <div className="space-y-2">
+        {projects.map((proj) => (
+          <div
+            key={proj.id}
+            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950/40 border border-gray-100 dark:border-gray-900 rounded-xl"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`h-8 w-8 rounded-lg flex items-center justify-center text-white ${proj.progress === 100 ? "bg-emerald-500" : "bg-purple-600"}`}
               >
-                <Trash2 size={14} />
-              </button>
+                {proj.progress === 100 ? (
+                  <CheckCircle size={14} />
+                ) : (
+                  <Flame size={14} />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  {proj.title}
+                </p>
+                <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                  {proj.url} <ExternalLink size={8} />
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => handleRemoveProject(proj.id)}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
