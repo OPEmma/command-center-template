@@ -43,10 +43,10 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Check subdomain parsing logic
   useEffect(() => {
     const host = window.location.hostname.toLowerCase().trim();
 
+    // 1. Explicitly check for our main root platforms and local environments
     if (
       host === "devhub.ng" ||
       host === "www.devhub.ng" ||
@@ -58,6 +58,7 @@ function App() {
       return;
     }
 
+    // 2. Handle active user subdomains (e.g., username.devhub.ng)
     if (host.endsWith(".devhub.ng")) {
       const extracted = host
         .replace(/^www\./, "")
@@ -67,15 +68,16 @@ function App() {
 
       if (RESERVED_SUBDOMAINS.includes(extracted)) {
         setSubdomain(null);
-        setLoading(false);
       } else {
         setSubdomain(extracted);
       }
+      setLoading(false);
     } else {
+      // 3. Fallback: If it's any other custom domain string, it is NOT a platform user subdomain
+      setSubdomain(null);
       setLoading(false);
     }
   }, []);
-
   // 3. Fetch profile and relational custom projects if subdomain matches
   useEffect(() => {
     if (!subdomain) return;

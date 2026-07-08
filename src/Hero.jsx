@@ -90,6 +90,33 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+  if (!isSubdomain) return;
+
+  const userSubdomain = profile?.username;
+  if (!userSubdomain) return;
+
+  const subscription = supabase
+    .channel("profile-updates")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `username=eq.${userSubdomain}`,
+      },
+      () => {
+        window.location.reload();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(subscription);
+  };
+}, [profile]);
+
   // Determine active project rendering dataset: Use custom user uploads if they exist, otherwise fallback to filler data
   const projects =
     customProjects.length > 0 ? customProjects : defaultProjectsData;
