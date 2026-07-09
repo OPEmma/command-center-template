@@ -91,35 +91,53 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
   }, []);
 
   useEffect(() => {
-  if (!isSubdomain) return;
+    if (!isSubdomain) return;
 
-  const userSubdomain = profile?.username;
-  if (!userSubdomain) return;
+    const userSubdomain = profile?.username;
+    if (!userSubdomain) return;
 
-  const subscription = supabase
-    .channel("profile-updates")
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "profiles",
-        filter: `username=eq.${userSubdomain}`,
-      },
-      () => {
-        window.location.reload();
-      }
-    )
-    .subscribe();
+    // 1. Channel for Profile Changes
+    const profileSubscription = supabase
+      .channel("profile-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Listens to INSERT, UPDATE, and DELETE
+          schema: "public",
+          table: "profiles",
+          filter: `username=eq.${userSubdomain}`,
+        },
+        () => {
+          window.location.reload();
+        },
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(subscription);
-  };
-}, [profile]);
+    // 2. Channel for Project Changes (Using user_id linked to the profile)
+    const projectSubscription = supabase
+      .channel("project-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "projects",
+          // Filters by the profile owner's ID
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          window.location.reload();
+        },
+      )
+      .subscribe();
 
-  // Determine active project rendering dataset: Use custom user uploads if they exist, otherwise fallback to filler data
+    return () => {
+      supabase.removeChannel(profileSubscription);
+      supabase.removeChannel(projectSubscription);
+    };
+  }, [profile, isSubdomain]);
   const projects =
-    customProjects.length > 0 ? customProjects : defaultProjectsData;
+    isSubdomain && profile ? customProjects : defaultProjectsData;
 
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);

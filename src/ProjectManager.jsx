@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -39,8 +39,15 @@ const AVAILABLE_TAGS = [
   "Framer",
 ];
 
-export default function ProjectManager({ onProjectsChange }) {
-  const [projects, setProjects] = useState([]);
+export default function ProjectManager({
+  initialProjects = [],
+  onProjectsChange,
+}) {
+  const [projects, setProjects] = useState(initialProjects);
+
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
   const [showForm, setShowForm] = useState(false);
 
   // Single Project Core Formulation State
