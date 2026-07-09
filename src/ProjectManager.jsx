@@ -8,24 +8,6 @@ import {
   Flame,
 } from "lucide-react";
 
-// Clean default workspace visual assets users can toggle through instantly
-const PRESET_IMAGES = [
-  { label: "Matrix UI", value: "WhatsApp Image 2026-06-15 at 18.53.50.jpeg" },
-  {
-    label: "Console Engine",
-    value: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
-  },
-  {
-    label: "Sleek Dashboard",
-    value: "WhatsApp Image 2026-06-16 at 23.55.33.jpeg",
-  },
-  {
-    label: "3D Graphics Mesh",
-    value: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg",
-  },
-  { label: "Generic Code IDE", value: "Screenshot 2026-06-17 001617.png" },
-];
-
 const AVAILABLE_TAGS = [
   "React",
   "Tailwind",
@@ -201,32 +183,7 @@ export default function ProjectManager({
             </div>
           </div>
 
-          {/* PRESAVED WORKSPACE ASSET SELECTOR */}
-          <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
-              Choose Frame Display Cover
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PRESET_IMAGES.map((img) => (
-                <button
-                  key={img.value}
-                  type="button"
-                  onClick={() =>
-                    setNewProject({ ...newProject, image: img.value })
-                  }
-                  className={`px-3 py-2 text-left rounded-lg text-[11px] font-medium border truncate transition-all ${
-                    newProject.image === img.value
-                      ? "bg-purple-50 dark:bg-purple-950/30 border-purple-500 text-purple-700 dark:text-purple-400 font-bold"
-                      : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  {img.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* CHIPS TAG SELECTOR */}
+         {/* CHIPS TAG SELECTOR */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
               Select Tech Stack Frameworks
