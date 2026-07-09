@@ -38,7 +38,7 @@ export default function ProjectManager({
     client: "",
     progress: 80,
     url: "",
-    image: PRESET_IMAGES[0].value,
+    image: "",
     tags: [],
   });
 
@@ -80,7 +80,7 @@ export default function ProjectManager({
       client: "",
       progress: 80,
       url: "",
-      image: PRESET_IMAGES[0].value,
+      image: "",
       tags: [],
     });
     setShowForm(false);

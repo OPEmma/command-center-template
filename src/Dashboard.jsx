@@ -180,7 +180,6 @@ function Dashboard() {
             siteName: data.developer_name || "",
             developerTitle: data.bio || "",
             repoUrl: data.github_repo_url || "",
-            sitePictureUrl: data.avatar_url || "", // safely fallbacks to blank if missing
           });
 
           setIntegrationData({
@@ -234,7 +233,6 @@ function Dashboard() {
         siteName: "",
         developerTitle: "",
         repoUrl: "",
-        sitePictureUrl: "",
       });
       setIntegrationData({ whatsappHandle: "", telegramHandle: "" });
       setCustomProjectsList([]);
