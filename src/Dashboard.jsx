@@ -622,7 +622,7 @@ function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    WhatsApp Link / Number
+                    WhatsApp Number
                   </label>
                   <input
                     type="text"

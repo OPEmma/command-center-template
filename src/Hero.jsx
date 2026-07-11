@@ -137,8 +137,7 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
     };
   }, [profile, isSubdomain]);
   const projects =
-    isSubdomain && profile ? customProjects : defaultProjectsData;
-
+    customProjects.length > 0 ? customProjects : defaultProjectsData;
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);
 

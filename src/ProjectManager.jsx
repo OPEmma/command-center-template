@@ -6,6 +6,7 @@ import {
   Code,
   CheckCircle,
   Flame,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const AVAILABLE_TAGS = [
@@ -32,7 +33,7 @@ export default function ProjectManager({
   }, [initialProjects]);
   const [showForm, setShowForm] = useState(false);
 
-  // Single Project Core Formulation State
+  // Single Project Core Formulation State (Image included)
   const [newProject, setNewProject] = useState({
     title: "",
     client: "",
@@ -42,13 +43,19 @@ export default function ProjectManager({
     tags: [],
   });
 
+  // Handle conveyor limit of max 3 tags
   const handleTagToggle = (tag) => {
-    setNewProject((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter((t) => t !== tag)
-        : [...prev.tags, tag],
-    }));
+    setNewProject((prev) => {
+      const isSelected = prev.tags.includes(tag);
+      if (isSelected) {
+        return { ...prev, tags: prev.tags.filter((t) => t !== tag) };
+      }
+      // Conveyor: if 3 already selected, drop the oldest (first) and add new
+      if (prev.tags.length >= 3) {
+        return { ...prev, tags: [...prev.tags.slice(1), tag] };
+      }
+      return { ...prev, tags: [...prev.tags, tag] };
+    });
   };
 
   const handleAddProject = (e) => {
@@ -71,7 +78,6 @@ export default function ProjectManager({
     ];
 
     setProjects(updated);
-    // Bubble updates straight up to your primary integration form state handler
     onProjectsChange(updated);
 
     // Reset Form Environment
@@ -183,11 +189,35 @@ export default function ProjectManager({
             </div>
           </div>
 
-         {/* CHIPS TAG SELECTOR */}
+          {/* 🌟 RE-ADD: SCREENSHOT COVER IMAGE INPUT LAYOUT */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
-              Select Tech Stack Frameworks
+            <label className="block text-[11px] font-bold text-gray-500 mb-1">
+              Project Cover Image URL
             </label>
+            <div className="relative flex items-center">
+              <input
+                type="url"
+                placeholder="https://images.unsplash.com/... or mockup link"
+                className="w-full text-xs rounded-lg border bg-white dark:bg-gray-900 dark:text-white border-gray-200 dark:border-gray-800 pl-8 pr-3 py-2 focus:border-purple-500 focus:outline-none"
+                value={newProject.image}
+                onChange={(e) =>
+                  setNewProject({ ...newProject, image: e.target.value })
+                }
+              />
+              <ImageIcon
+                className="absolute left-2.5 text-gray-400 pointer-events-none"
+                size={14}
+              />
+            </div>
+          </div>
+
+          {/* CHIPS TAG SELECTOR WITH MAX-3 WARNING SUMMARY */}
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-[11px] font-bold text-gray-500">
+                Select Tech Stack Frameworks
+              </label>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {AVAILABLE_TAGS.map((tag) => {
                 const selected = newProject.tags.includes(tag);
@@ -214,7 +244,7 @@ export default function ProjectManager({
             onClick={handleAddProject}
             className="w-full mt-2 rounded-lg bg-gray-900 dark:bg-purple-600 hover:dark:bg-purple-700 text-white text-xs font-bold py-2.5 transition"
           >
-            Append Engine Instance Track
+            Add Project
           </button>
         </div>
       )}
