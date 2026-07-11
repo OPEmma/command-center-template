@@ -268,7 +268,6 @@ function Dashboard() {
           telegram_handle: integrationData.telegramHandle,
           selected_projects: JSON.stringify(customProjectsList),
           theme_preference: selectedTheme,
-          avatar_url: customWorkspace.sitePictureUrl,
         },
       ]);
 
