@@ -456,7 +456,11 @@ function Dashboard() {
 
               {/* DYNAMIC PARAMETER CONFIGURATION TABS FOR LIVE SITES */}
               <button
-                onClick={() => setCopyStep("manualForm")}
+                onClick={() =>
+                  hasLiveSite
+                    ? setCopyStep("integrations")
+                    : setCopyStep("manualForm")
+                }
                 className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
               >
                 {hasLiveSite ? "Update Live Site" : "Type Parameters"}{" "}
