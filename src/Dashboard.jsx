@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "./supabaseClient.js";
-import ProjectManager from "./ProjectManager.jsx"; // Importing your custom manager component
+import ProjectManager from "./ProjectManager.jsx";
 import {
   Copy,
   ArrowRight,
@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 
 const THEME_PALETTE = [
-  // Dark themes
   {
     name: "Cyber Purple",
     colors: ["#7c3aed", "#6366f1", "#1e1b4b"],
@@ -68,7 +67,6 @@ const THEME_PALETTE = [
     colors: ["#0369a1", "#0ea5e9", "#0c1929"],
     category: "Dark",
   },
-  // Light themes
   {
     name: "Lavender Dream",
     colors: ["#7c3aed", "#a78bfa", "#f5f3ff"],
@@ -114,24 +112,77 @@ const RESERVED_SUBDOMAINS = [
   "test",
 ];
 
+const DEFAULT_PROJECTS = [
+  {
+    id: "d1",
+    title: "Trust Events Ltd",
+    client: "Collaborated with Trust Events CEO",
+    progress: 80,
+    status: "In Progress",
+    url: "https://trustevents.com.ng/",
+    image: "WhatsApp Image 2026-06-15 at 18.53.50.jpeg",
+    tags: ["React", "Tailwind", "Stripe"],
+  },
+  {
+    id: "d2",
+    title: "Popcat",
+    client: "Popcat.io",
+    progress: 100,
+    status: "Completed",
+    url: "https://popcat.click/",
+    image: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
+    tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
+  },
+  {
+    id: "d3",
+    title: "UniTrade × UI Student Union",
+    client: "Collaborated with UI Student Union",
+    progress: 85,
+    status: "In Progress",
+    url: "https://unitradeconnect.com.ng/",
+    image: "WhatsApp Image 2026-06-16 at 23.55.33.jpeg",
+    tags: ["React", "PayStack", "Supabase"],
+  },
+  {
+    id: "d4",
+    title: "THREE",
+    client: "Collaborated with THREE",
+    progress: 100,
+    status: "Completed",
+    url: "https://three.ws/",
+    image: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg",
+    tags: ["React", "Three.js", "Framer", "Blender"],
+  },
+  {
+    id: "d5",
+    title: "PyCon",
+    client: "Collaborated with PyCon.co",
+    progress: 100,
+    status: "Completed",
+    url: "https://ng.pycon.org/",
+    image: "Screenshot 2026-06-17 001617.png",
+    tags: ["Python", "Django", "Tailwind"],
+  },
+];
+
 function Dashboard() {
   const [session, setSession] = useState(null);
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
   const [hasLiveSite, setHasLiveSite] = useState(false);
-  const [copyStep, setCopyStep] = useState("selection"); // 'selection', 'manualForm', 'domainPopup', 'integrations', 'success'
+  const [copyStep, setCopyStep] = useState("selection");
   const [selectedTheme, setSelectedTheme] = useState("Cyber Purple");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subdomain, setSubdomain] = useState("");
   const [showAllThemes, setShowAllThemes] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [publishedUrl, setPublishedUrl] = useState("");
-  const [customProjectsList, setCustomProjectsList] = useState([]);
+  const [customProjectsList, setCustomProjectsList] =
+    useState(DEFAULT_PROJECTS);
 
   const [customWorkspace, setCustomWorkspace] = useState({
     siteName: "",
     developerTitle: "",
     repoUrl: "",
-    sitePictureUrl: "", // Added support for custom site profile image state mapping
   });
   const [integrationData, setIntegrationData] = useState({
     whatsappHandle: "",
@@ -153,7 +204,6 @@ function Dashboard() {
       if (!session) {
         window.location.href = "/";
       } else {
-        // Safe selection query: removing potential missing columns for stability
         const { data, error } = await supabase
           .from("profiles")
           .select(
@@ -169,7 +219,6 @@ function Dashboard() {
         if (data) {
           if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
 
-          // This is the core check that triggers the "Update Live Site" view!
           if (data.username && data.username.trim() !== "") {
             setSubdomain(data.username);
             setPublishedUrl(`https://${data.username}.devhub.ng`);
@@ -189,14 +238,15 @@ function Dashboard() {
 
           if (data.selected_projects) {
             try {
-              // Safe JSON evaluation handles stringified arrays or direct objects
               const parsed =
                 typeof data.selected_projects === "string"
                   ? JSON.parse(data.selected_projects)
                   : data.selected_projects;
-              setCustomProjectsList(Array.isArray(parsed) ? parsed : []);
+              setCustomProjectsList(
+                Array.isArray(parsed) ? parsed : DEFAULT_PROJECTS,
+              );
             } catch (e) {
-              setCustomProjectsList([]);
+              setCustomProjectsList(DEFAULT_PROJECTS);
             }
           }
         }
@@ -235,7 +285,7 @@ function Dashboard() {
         repoUrl: "",
       });
       setIntegrationData({ whatsappHandle: "", telegramHandle: "" });
-      setCustomProjectsList([]);
+      setCustomProjectsList(DEFAULT_PROJECTS);
     }
   };
 
@@ -312,7 +362,6 @@ function Dashboard() {
                 : "Configure your site and claim your subdomain."}
             </p>
 
-            {/* EXPANDABLE THEME PALETTE */}
             <div className="p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -326,7 +375,6 @@ function Dashboard() {
                 </span>
               </div>
 
-              {/* Category Pills */}
               <div className="flex gap-2 flex-wrap mb-4">
                 {["All", "Dark", "Light"].map((cat) => (
                   <button
@@ -344,7 +392,6 @@ function Dashboard() {
                 ))}
               </div>
 
-              {/* Theme Grid */}
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
                 {displayedThemes.map((theme, idx) => (
                   <button
@@ -395,7 +442,6 @@ function Dashboard() {
                 ))}
               </div>
 
-              {/* Expand/Collapse */}
               {filteredThemes.length > 6 && (
                 <div className="text-center pt-3">
                   <button
@@ -419,7 +465,6 @@ function Dashboard() {
           </>
         )}
 
-        {/* FLOW STEPS */}
         {copyStep === "selection" && (
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
@@ -454,7 +499,6 @@ function Dashboard() {
                 {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
               </button>
 
-              {/* DYNAMIC PARAMETER CONFIGURATION TABS FOR LIVE SITES */}
               <button
                 onClick={() =>
                   hasLiveSite
@@ -519,21 +563,6 @@ function Dashboard() {
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
                 />
               </div>
-            </div>
-
-            {/* EXPANDED FIELDS FOR CMS CONTROLS */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                Site Profile Picture URL
-              </label>
-              <input
-                type="url"
-                name="sitePictureUrl"
-                value={customWorkspace.sitePictureUrl}
-                onChange={handleWorkspaceChange}
-                placeholder="https://images.unsplash.com/... or github avatar link"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
-              />
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -672,7 +701,6 @@ function Dashboard() {
           </div>
         )}
 
-        {/* NATIVE SUCCESS PANEL */}
         {copyStep === "success" && (
           <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl space-y-5 animate-fade-in">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">
