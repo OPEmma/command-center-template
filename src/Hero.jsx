@@ -63,6 +63,8 @@ const defaultProjectsData = [
   },
 ];
 
+// add line
+
 function Hero({ profile, customProjects = null, isSubdomain = false }) {
   const [session, setSession] = useState(null);
   const [mobileFilter, setMobileFilter] = useState("all");
