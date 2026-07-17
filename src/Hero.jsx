@@ -63,7 +63,6 @@ const defaultProjectsData = [
   },
 ];
 
-// add line
 
 function Hero({ profile, customProjects = null, isSubdomain = false }) {
   const [session, setSession] = useState(null);
@@ -73,7 +72,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);    
   }, []);
 
   useEffect(() => {

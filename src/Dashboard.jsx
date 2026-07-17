@@ -254,17 +254,21 @@ function Dashboard() {
     });
   }, []);
 
-  const handleConnectGitHub = () => {
-    if (!session?.user?.id) {
-      alert("Please log in before connecting your GitHub account.");
-      return;
-    }
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectUri =
-      "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${session.user.id}`;
-  };
-
+const handleConnectGitHub = () => {
+  if (!session?.user?.id) {
+    alert("Please log in before connecting your GitHub account.");
+    return;
+  }
+  if (!hasLiveSite) {
+    alert("Please claim your subdomain first before connecting GitHub.");
+    return;
+  }
+  const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  const redirectUri =
+    "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
+  window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${session.user.id}`;
+};
+  
   const handleWorkspaceChange = (e) => {
     setCustomWorkspace({ ...customWorkspace, [e.target.name]: e.target.value });
   };
@@ -466,53 +470,59 @@ function Dashboard() {
         )}
 
         {copyStep === "selection" && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                <Code2 size={16} className="text-purple-500" /> Package Manifest
-                Bundle Contents:
-              </p>
-              <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                <li>
-                  Fully Configured Recharts Month-over-Month Line Flowcharts
-                </li>
-                <li>Adaptive 4-Column Statcard Grid UI Containers</li>
-                <li>
-                  No-Code Dynamic JSON State Mutators for Sprints & Images
-                </li>
-              </ul>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={
-                  githubRepoUrl
-                    ? () => window.open(githubRepoUrl, "_blank")
-                    : handleConnectGitHub
-                }
-                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-                  githubRepoUrl
-                    ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400"
-                    : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Copy size={14} />{" "}
-                {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
-              </button>
+  <div className="space-y-4">
+    <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+        <Code2 size={16} className="text-purple-500" /> Package Manifest
+        Bundle Contents:
+      </p>
+      <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+        <li>
+          Fully Configured Recharts Month-over-Month Line Flowcharts
+        </li>
+        <li>Adaptive 4-Column Statcard Grid UI Containers</li>
+        <li>
+          No-Code Dynamic JSON State Mutators for Sprints & Images
+        </li>
+      </ul>
+    </div>
 
-              <button
-                onClick={() =>
-                  hasLiveSite
-                    ? setCopyStep("integrations")
-                    : setCopyStep("manualForm")
-                }
-                className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
-              >
-                {hasLiveSite ? "Update Live Site" : "Type Parameters"}{" "}
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        )}
+    {!hasLiveSite ? (
+      <button
+        onClick={() => setCopyStep("manualForm")}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+      >
+        Type Parameters <ArrowRight size={14} />
+      </button>
+    ) : (
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={
+            githubRepoUrl
+              ? () => window.open(githubRepoUrl, "_blank")
+              : handleConnectGitHub
+          }
+          className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+            githubRepoUrl
+              ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400"
+              : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+          }`}
+        >
+          <Copy size={14} />{" "}
+          {githubRepoUrl ? "Open Custom Repo" : "Connect GitHub"}
+        </button>
+
+        <button
+          onClick={() => setCopyStep("integrations")}
+          className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+        >
+          Update Live Site <ArrowRight size={14} />
+        </button>
+      </div>
+    )}
+  </div>
+)}
+
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
