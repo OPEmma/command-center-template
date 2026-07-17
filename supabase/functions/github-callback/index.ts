@@ -64,38 +64,58 @@ serve(async (req) => {
 
     const userData = await userResponse.json();
     const githubUsername = userData.login;
-
-    // 3. Clone/Fork your template repo into their new repo space
+    
+    // Define the standardized clean repository name
     const repoName = "my-devhub-portfolio";
-    const generateResponse = await fetch(
-      `https://api.github.com/repos/OPEmma/command-center-template/generate`,
+    let deployedRepoUrl = `https://github.com/To/${githubUsername}/${repoName}`;
+
+    // 2.5. Check if the repository already exists on their account
+    const repoCheckResponse = await fetch(
+      `https://api.github.com/repos/${githubUsername}/${repoName}`,
       {
-        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
           "User-Agent": "DevHub-Platform",
         },
-        body: JSON.stringify({
-          owner: githubUsername,
-          name: repoName,
-          description: "Deployed instantly via DevHub Platform",
-          private: false,
-        }),
-      },
+      }
     );
 
-    const generateData = await generateResponse.json();
-
-    // ERROR HANDLING: Handle duplicate repository naming conflicts or API blocks
-    if (!generateResponse.ok) {
-      throw new Error(
-        `GitHub repository generation failed: ${generateData.message || generateResponse.statusText}`,
+    if (repoCheckResponse.ok) {
+      // Repository exists! Parse its accurate link and skip template generation
+      const repoInfo = await repoCheckResponse.json();
+      deployedRepoUrl = repoInfo.html_url;
+      console.log(`[OAuth Context]: Repository already exists. Re-routing directly to: ${deployedRepoUrl}`);
+    } else {
+      // 3. Repository doesn't exist yet, generate it from your boilerplate template
+      const generateResponse = await fetch(
+        `https://api.github.com/repos/OPEmma/command-center-template/generate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json",
+            "User-Agent": "DevHub-Platform",
+          },
+          body: JSON.stringify({
+            owner: githubUsername,
+            name: repoName,
+            description: "Deployed instantly via DevHub Platform",
+            private: false,
+          }),
+        },
       );
-    }
 
-    const deployedRepoUrl = generateData.html_url;
+      const generateData = await generateResponse.json();
+
+      if (!generateResponse.ok) {
+        throw new Error(
+          `GitHub repository generation failed: ${generateData.message || generateResponse.statusText}`,
+        );
+      }
+
+      deployedRepoUrl = generateData.html_url;
+    }
 
     // 4. Safely update user profile record in Supabase
     const supabaseClient = createClient(
@@ -124,7 +144,6 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error(`[OAuth Error Context]: ${error.message}`);
-    // Redirect cleanly to frontend with the descriptive URL error parameter
     return new Response(null, {
       status: 302,
       headers: {
