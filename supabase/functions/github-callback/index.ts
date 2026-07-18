@@ -2,9 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+ "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
 };
 
 serve(async (req) => {
@@ -64,7 +63,7 @@ serve(async (req) => {
 
     const userData = await userResponse.json();
     const githubUsername = userData.login;
-    
+
     // Define the standardized clean repository name
     const repoName = "my-devhub-portfolio";
     let deployedRepoUrl = `https://github.com/To/${githubUsername}/${repoName}`;
@@ -77,14 +76,16 @@ serve(async (req) => {
           Authorization: `Bearer ${accessToken}`,
           "User-Agent": "DevHub-Platform",
         },
-      }
+      },
     );
 
     if (repoCheckResponse.ok) {
       // Repository exists! Parse its accurate link and skip template generation
       const repoInfo = await repoCheckResponse.json();
       deployedRepoUrl = repoInfo.html_url;
-      console.log(`[OAuth Context]: Repository already exists. Re-routing directly to: ${deployedRepoUrl}`);
+      console.log(
+        `[OAuth Context]: Repository already exists. Re-routing directly to: ${deployedRepoUrl}`,
+      );
     } else {
       // 3. Repository doesn't exist yet, generate it from your boilerplate template
       const generateResponse = await fetch(
