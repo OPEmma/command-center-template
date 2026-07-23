@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   deploy:
+    # Skip on the template repo itself
+    if: github.repository != 'OPEmma/command-center-template'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
