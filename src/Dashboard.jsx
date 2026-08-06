@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "./supabaseClient.js";
-import ProjectManager from "./ProjectManager.jsx"; // Importing your custom manager component
+import ProjectManager from "./ProjectManager.jsx";
 import {
   Copy,
   ArrowRight,
@@ -12,10 +12,11 @@ import {
   ExternalLink,
   CheckCircle,
   Cat,
+  Code2,
+  Trash2,
 } from "lucide-react";
 
 const THEME_PALETTE = [
-  // Dark themes
   {
     name: "Cyber Purple",
     colors: ["#7c3aed", "#6366f1", "#1e1b4b"],
@@ -66,7 +67,6 @@ const THEME_PALETTE = [
     colors: ["#0369a1", "#0ea5e9", "#0c1929"],
     category: "Dark",
   },
-  // Light themes
   {
     name: "Lavender Dream",
     colors: ["#7c3aed", "#a78bfa", "#f5f3ff"],
@@ -112,16 +112,72 @@ const RESERVED_SUBDOMAINS = [
   "test",
 ];
 
+const DEFAULT_PROJECTS = [
+  {
+    id: "d1",
+    title: "Trust Events Ltd",
+    client: "Collaborated with Trust Events CEO",
+    progress: 80,
+    status: "In Progress",
+    url: "https://trustevents.com.ng/",
+    image: "WhatsApp Image 2026-06-15 at 18.53.50.jpeg",
+    tags: ["React", "Tailwind", "Stripe"],
+  },
+  {
+    id: "d2",
+    title: "Popcat",
+    client: "Popcat.io",
+    progress: 100,
+    status: "Completed",
+    url: "https://popcat.click/",
+    image: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
+    tags: ["Audio Context", "Clicker Engine", "Event Matrix"],
+  },
+  {
+    id: "d3",
+    title: "UniTrade × UI Student Union",
+    client: "Collaborated with UI Student Union",
+    progress: 85,
+    status: "In Progress",
+    url: "https://unitradeconnect.com.ng/",
+    image: "WhatsApp Image 2026-06-16 at 23.55.33.jpeg",
+    tags: ["React", "PayStack", "Supabase"],
+  },
+  {
+    id: "d4",
+    title: "THREE",
+    client: "Collaborated with THREE",
+    progress: 100,
+    status: "Completed",
+    url: "https://three.ws/",
+    image: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg",
+    tags: ["React", "Three.js", "Framer", "Blender"],
+  },
+  {
+    id: "d5",
+    title: "PyCon",
+    client: "Collaborated with PyCon.co",
+    progress: 100,
+    status: "Completed",
+    url: "https://ng.pycon.org/",
+    image: "Screenshot 2026-06-17 001617.png",
+    tags: ["Python", "Django", "Tailwind"],
+  },
+];
+
 function Dashboard() {
   const [session, setSession] = useState(null);
-  const [copyStep, setCopyStep] = useState("selection"); // 'selection', 'manualForm', 'domainPopup', 'integrations', 'success'
+  const [githubRepoUrl, setGithubRepoUrl] = useState("");
+  const [hasLiveSite, setHasLiveSite] = useState(false);
+  const [copyStep, setCopyStep] = useState("selection");
   const [selectedTheme, setSelectedTheme] = useState("Cyber Purple");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subdomain, setSubdomain] = useState("");
   const [showAllThemes, setShowAllThemes] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [publishedUrl, setPublishedUrl] = useState("");
-  const [customProjectsList, setCustomProjectsList] = useState([]);
+  const [customProjectsList, setCustomProjectsList] =
+    useState(DEFAULT_PROJECTS);
 
   const [customWorkspace, setCustomWorkspace] = useState({
     siteName: "",
@@ -143,14 +199,76 @@ function Dashboard() {
     : filteredThemes.slice(0, 6);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (!session) {
         window.location.href = "/";
+      } else {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(
+            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
+          )
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Supabase fetch error:", error.message);
+        }
+
+        if (data) {
+          if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
+
+          if (data.username && data.username.trim() !== "") {
+            setSubdomain(data.username);
+            setPublishedUrl(`https://${data.username}.devhub.ng`);
+            setHasLiveSite(true);
+          }
+
+          setCustomWorkspace({
+            siteName: data.developer_name || "",
+            developerTitle: data.bio || "",
+            repoUrl: data.github_repo_url || "",
+          });
+
+          setIntegrationData({
+            whatsappHandle: data.whatsapp_number || "",
+            telegramHandle: data.telegram_handle || "",
+          });
+
+          if (data.selected_projects) {
+            try {
+              const parsed =
+                typeof data.selected_projects === "string"
+                  ? JSON.parse(data.selected_projects)
+                  : data.selected_projects;
+              setCustomProjectsList(
+                Array.isArray(parsed) ? parsed : DEFAULT_PROJECTS,
+              );
+            } catch (e) {
+              setCustomProjectsList(DEFAULT_PROJECTS);
+            }
+          }
+        }
       }
     });
   }, []);
 
+const handleConnectGitHub = () => {
+  if (!session?.user?.id) {
+    alert("Please log in before connecting your GitHub account.");
+    return;
+  }
+  if (!hasLiveSite) {
+    alert("Please claim your subdomain first before connecting GitHub.");
+    return;
+  }
+  const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  const redirectUri =
+    "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
+  window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${session.user.id}`;
+};
+  
   const handleWorkspaceChange = (e) => {
     setCustomWorkspace({ ...customWorkspace, [e.target.name]: e.target.value });
   };
@@ -159,8 +277,24 @@ function Dashboard() {
     setIntegrationData({ ...integrationData, [e.target.name]: e.target.value });
   };
 
+  const handleDeleteCard = () => {
+    if (
+      confirm(
+        "Are you absolute sure you want to completely clear out your workspace dynamic configurations? This will reset form fields.",
+      )
+    ) {
+      setCustomWorkspace({
+        siteName: "",
+        developerTitle: "",
+        repoUrl: "",
+      });
+      setIntegrationData({ whatsappHandle: "", telegramHandle: "" });
+      setCustomProjectsList(DEFAULT_PROJECTS);
+    }
+  };
+
   const handlePublishWorkspace = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const cleanSubdomain = subdomain.toLowerCase().trim();
 
     if (!cleanSubdomain) {
@@ -168,7 +302,7 @@ function Dashboard() {
       return;
     }
 
-    if (RESERVED_SUBDOMAINS.includes(cleanSubdomain)) {
+    if (!hasLiveSite && RESERVED_SUBDOMAINS.includes(cleanSubdomain)) {
       alert(
         `"${cleanSubdomain}" is a protected system domain configuration phrase. Please pick another name.`,
       );
@@ -177,7 +311,6 @@ function Dashboard() {
 
     setIsSubmitting(true);
     try {
-      // Changed .insert() to .upsert() and included the target 'id' to map uniquely
       const { error } = await supabase.from("profiles").upsert([
         {
           id: session?.user?.id,
@@ -187,7 +320,7 @@ function Dashboard() {
           email: session?.user?.email,
           whatsapp_number: integrationData.whatsappHandle,
           telegram_handle: integrationData.telegramHandle,
-          selected_projects: JSON.stringify(customProjectsList), // Correctly stringifying user projects array
+          selected_projects: JSON.stringify(customProjectsList),
           theme_preference: selectedTheme,
         },
       ]);
@@ -202,6 +335,7 @@ function Dashboard() {
       }
 
       setPublishedUrl(`https://${cleanSubdomain}.devhub.ng`);
+      setHasLiveSite(true);
       setCopyStep("success");
     } catch (error) {
       alert(error.message || "Error saving profile configuration.");
@@ -227,10 +361,11 @@ function Dashboard() {
               Workspace Dashboard
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Configure your site and claim your subdomain.
+              {hasLiveSite
+                ? "Manage your production engine properties."
+                : "Configure your site and claim your subdomain."}
             </p>
 
-            {/* EXPANDABLE THEME PALETTE */}
             <div className="p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -240,11 +375,10 @@ function Dashboard() {
                   </label>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {THEME_PALETTE.length} themes{" "}
+                  {THEME_PALETTE.length} themes
                 </span>
               </div>
 
-              {/* Category Pills */}
               <div className="flex gap-2 flex-wrap mb-4">
                 {["All", "Dark", "Light"].map((cat) => (
                   <button
@@ -262,7 +396,6 @@ function Dashboard() {
                 ))}
               </div>
 
-              {/* Theme Grid */}
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
                 {displayedThemes.map((theme, idx) => (
                   <button
@@ -313,7 +446,6 @@ function Dashboard() {
                 ))}
               </div>
 
-              {/* Expand/Collapse */}
               {filteredThemes.length > 6 && (
                 <div className="text-center pt-3">
                   <button
@@ -337,47 +469,77 @@ function Dashboard() {
           </>
         )}
 
-        {/* FLOW STEPS */}
         {copyStep === "selection" && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">
-                Package Manifest Bundle Contents:
-              </p>
-              <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                <li>
-                  Fully Configured Recharts Month-over-Month Line Flowcharts
-                </li>
-                <li>Adaptive 4-Column Statcard Grid UI Containers</li>
-                <li>
-                  No-Code Dynamic JSON State Mutators for Sprints & Images
-                </li>
-              </ul>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() =>
-                  window.open(
-                    "https://github.com/OPEmma/command-center-template",
-                    "_blank",
-                  )
-                }
-                className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-              >
-                <Copy size={14} /> Visit Repository
-              </button>
-              <button
-                onClick={() => setCopyStep("manualForm")}
-                className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
-              >
-                Type Parameters <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        )}
+  <div className="space-y-4">
+    <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+        <Code2 size={16} className="text-purple-500" /> Package Manifest
+        Bundle Contents:
+      </p>
+      <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+        <li>
+          Fully Configured Recharts Month-over-Month Line Flowcharts
+        </li>
+        <li>Adaptive 4-Column Statcard Grid UI Containers</li>
+        <li>
+          No-Code Dynamic JSON State Mutators for Sprints & Images
+        </li>
+      </ul>
+    </div>
+
+    {!hasLiveSite ? (
+      <button
+        onClick={() => setCopyStep("manualForm")}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+      >
+        Type Parameters <ArrowRight size={14} />
+      </button>
+    ) : (
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={
+            githubRepoUrl
+              ? () => window.open(githubRepoUrl, "_blank")
+              : handleConnectGitHub
+          }
+          className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+            githubRepoUrl
+              ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400"
+              : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+          }`}
+        >
+          <Copy size={14} />{" "}
+          {githubRepoUrl ? "Connect Repo" : "Connect GitHub"}
+        </button>
+
+        <button
+          onClick={() => setCopyStep("integrations")}
+          className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+        >
+          Update Live Site <ArrowRight size={14} />
+        </button>
+      </div>
+    )}
+  </div>
+)}
+
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                Workspace Configuration Core Parameters
+              </h3>
+              <button
+                type="button"
+                onClick={handleDeleteCard}
+                className="p-1.5 text-gray-400 hover:text-red-500 transition rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+                title="Reset Form Data"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -393,8 +555,8 @@ function Dashboard() {
                     className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
                   />
                   <Cat
-                    size={16}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
+                    size={16}
                   />
                 </div>
               </div>
@@ -421,13 +583,17 @@ function Dashboard() {
                 Back
               </button>
               <button
-                onClick={() => setCopyStep("domainPopup")}
+                onClick={() =>
+                  hasLiveSite
+                    ? setCopyStep("integrations")
+                    : setCopyStep("domainPopup")
+                }
                 disabled={
                   !customWorkspace.siteName || !customWorkspace.developerTitle
                 }
                 className="w-2/3 rounded-lg bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 py-2.5 disabled:opacity-40"
               >
-                Allocate Domain
+                {hasLiveSite ? "Configure Core Extensions" : "Allocate Domain"}
               </button>
             </div>
           </div>
@@ -483,8 +649,8 @@ function Dashboard() {
 
         {copyStep === "integrations" && (
           <div className="space-y-6">
-            {/* The project creator form component handles project parameters smoothly */}
             <ProjectManager
+              initialProjects={customProjectsList}
               onProjectsChange={(list) => setCustomProjectsList(list)}
             />
 
@@ -495,7 +661,7 @@ function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    WhatsApp
+                    WhatsApp Number
                   </label>
                   <input
                     type="text"
@@ -508,7 +674,7 @@ function Dashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    Telegram
+                    Telegram Handle
                   </label>
                   <input
                     type="text"
@@ -524,7 +690,7 @@ function Dashboard() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setCopyStep("domainPopup")}
+                  onClick={() => setCopyStep("manualForm")}
                   className="w-1/3 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-300 py-2.5"
                 >
                   Back
@@ -534,14 +700,17 @@ function Dashboard() {
                   disabled={isSubmitting}
                   className="w-2/3 rounded-lg bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 py-2.5 disabled:opacity-40"
                 >
-                  {isSubmitting ? "Publishing..." : "Upload & Publish Core"}
+                  {isSubmitting
+                    ? "Syncing..."
+                    : hasLiveSite
+                      ? "Sync Structural Updates"
+                      : "Upload & Publish Core"}
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {/* NATIVE SUCCESS PANEL */}
         {copyStep === "success" && (
           <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl space-y-5 animate-fade-in">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">
@@ -549,12 +718,11 @@ function Dashboard() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-black text-gray-900 dark:text-white">
-                Portfolio is Live!
+                Portfolio Synced!
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Your deployment core engine has systematically provisioned
-                resources seamlessly. Your workspace is online at your newly
-                mapped target sub-route destination.
+                Your deployment core engine has systematically updated and
+                pushed changes out live to your mapped domain destination space.
               </p>
             </div>
 
@@ -574,10 +742,10 @@ function Dashboard() {
 
             <div className="pt-4">
               <button
-                onClick={() => window.location.reload()}
-                className="text-xs text-gray-400 hover:text-gray-600 underline"
+                onClick={() => setCopyStep("selection")}
+                className="text-xs text-gray-400 hover:text-purple-600 underline"
               >
-                Configure Another Environment
+                Return to Workspace Root
               </button>
             </div>
           </div>

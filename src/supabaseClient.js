@@ -1,11 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+ import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl =
+  (typeof window !== "undefined" && window.__ENV__?.VITE_SUPABASE_URL) ||
+  import.meta.env.VITE_SUPABASE_URL;
+
+const supabaseAnonKey =
+  (typeof window !== "undefined" && window.__ENV__?.VITE_SUPABASE_ANON_KEY) ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("Supabase credentials missing. Check your local environment configurations.");
+  console.warn(
+    "Supabase credentials missing. Check window.__ENV__ or local environment configurations.",
+  );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+// Fallback to empty string if missing
+export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");

@@ -20,7 +20,7 @@ const RESERVED_SUBDOMAINS = [
 function App() {
   const [subdomain, setSubdomain] = useState(null);
   const [profileData, setProfileData] = useState(null);
-  const [projectData, setProjectData] = useState([]); // Replaces selected_projects jsonb string
+  const [projectData, setProjectData] = useState(null); // null = not configured yet, falls back to defaults in Hero
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -43,10 +43,10 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Check subdomain parsing logic
   useEffect(() => {
     const host = window.location.hostname.toLowerCase().trim();
 
+    // 1. Explicitly check for our main root platforms and local environments
     if (
       host === "devhub.ng" ||
       host === "www.devhub.ng" ||
@@ -58,6 +58,7 @@ function App() {
       return;
     }
 
+    // 2. Handle active user subdomains (e.g., username.devhub.ng)
     if (host.endsWith(".devhub.ng")) {
       const extracted = host
         .replace(/^www\./, "")
@@ -67,26 +68,27 @@ function App() {
 
       if (RESERVED_SUBDOMAINS.includes(extracted)) {
         setSubdomain(null);
-        setLoading(false);
       } else {
         setSubdomain(extracted);
       }
+      setLoading(false);
     } else {
+      // 3. Fallback: If it's any other custom domain string, it is NOT a platform user subdomain
+      setSubdomain(null);
       setLoading(false);
     }
   }, []);
 
-  // 3. Fetch profile and relational custom projects if subdomain matches
+  // 3. Fetch profile and its saved project config from the profiles table
   useEffect(() => {
     if (!subdomain) return;
 
     async function fetchUserProfileAndProjects() {
       try {
-        // Fetch Profile Matrix Details
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
-            "id, username, developer_name, bio, whatsapp_number, telegram_handle",
+            "id, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
           )
           .eq("username", subdomain)
           .maybeSingle(); // Prevents throwing hard unhandled errors if profile doesn't exist
@@ -96,15 +98,25 @@ function App() {
         if (profile) {
           setProfileData(profile);
 
-          // Query relational projects via user_id foreign key reference
-          const { data: projects, error: projectsError } = await supabase
-            .from("projects")
-            .select("*")
-            .eq("user_id", profile.id)
-            .order("created_at", { ascending: false });
-
-          if (projectsError) throw projectsError;
-          setProjectData(projects || []);
+          // Distinguish "never configured" (null/undefined) from
+          // "intentionally emptied" ([]) so Hero knows whether to fall
+          // back to platform defaults or show a genuinely empty state
+          if (
+            profile.selected_projects === null ||
+            profile.selected_projects === undefined
+          ) {
+            setProjectData(null);
+          } else {
+            try {
+              const parsed =
+                typeof profile.selected_projects === "string"
+                  ? JSON.parse(profile.selected_projects)
+                  : profile.selected_projects;
+              setProjectData(Array.isArray(parsed) ? parsed : null);
+            } catch {
+              setProjectData(null);
+            }
+          }
         }
       } catch (err) {
         console.error("Error loading profile setup environment:", err);
@@ -179,7 +191,7 @@ function App() {
           element={
             <div className="relative min-h-screen bg-white dark:bg-gray-950">
               <Header profile={null} />
-              <Hero profile={null} customProjects={[]} isSubdomain={false} />
+              <Hero profile={null} customProjects={null} isSubdomain={false} />
             </div>
           }
         />

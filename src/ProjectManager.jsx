@@ -1,4 +1,4 @@
-import { useState } from "react";
+ import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -6,25 +6,10 @@ import {
   Code,
   CheckCircle,
   Flame,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
-
-// Clean default workspace visual assets users can toggle through instantly
-const PRESET_IMAGES = [
-  { label: "Matrix UI", value: "WhatsApp Image 2026-06-15 at 18.53.50.jpeg" },
-  {
-    label: "Console Engine",
-    value: "WhatsApp Image 2026-06-17 at 00.25.19.jpeg",
-  },
-  {
-    label: "Sleek Dashboard",
-    value: "WhatsApp Image 2026-06-16 at 23.55.33.jpeg",
-  },
-  {
-    label: "3D Graphics Mesh",
-    value: "WhatsApp Image 2026-06-15 at 23.41.11.jpeg",
-  },
-  { label: "Generic Code IDE", value: "Screenshot 2026-06-17 001617.png" },
-];
+import { supabase } from "./supabaseClient.js"; // double check this path matches your project
 
 const AVAILABLE_TAGS = [
   "React",
@@ -39,27 +24,71 @@ const AVAILABLE_TAGS = [
   "Framer",
 ];
 
-export default function ProjectManager({ onProjectsChange }) {
-  const [projects, setProjects] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+export default function ProjectManager({
+  initialProjects = [],
+  onProjectsChange,
+}) {
+  const [projects, setProjects] = useState(initialProjects);
 
-  // Single Project Core Formulation State
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
+  const [showForm, setShowForm] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Single Project Core Formulation State (Image included)
   const [newProject, setNewProject] = useState({
     title: "",
     client: "",
     progress: 80,
     url: "",
-    image: PRESET_IMAGES[0].value,
+    image: "",
     tags: [],
   });
 
+  // Handle uploading the project cover image to Supabase storage
+  const handleProjectImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `project-${Date.now()}.${fileExt}`;
+      const filePath = `project-thumbnails/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("portfolio-buckets")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("portfolio-buckets").getPublicUrl(filePath);
+
+      setNewProject((prev) => ({ ...prev, image: publicUrl }));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload image: " + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle conveyor limit of max 3 tags
   const handleTagToggle = (tag) => {
-    setNewProject((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter((t) => t !== tag)
-        : [...prev.tags, tag],
-    }));
+    setNewProject((prev) => {
+      const isSelected = prev.tags.includes(tag);
+      if (isSelected) {
+        return { ...prev, tags: prev.tags.filter((t) => t !== tag) };
+      }
+      // Conveyor: if 3 already selected, drop the oldest (first) and add new
+      if (prev.tags.length >= 3) {
+        return { ...prev, tags: [...prev.tags.slice(1), tag] };
+      }
+      return { ...prev, tags: [...prev.tags, tag] };
+    });
   };
 
   const handleAddProject = (e) => {
@@ -82,7 +111,6 @@ export default function ProjectManager({ onProjectsChange }) {
     ];
 
     setProjects(updated);
-    // Bubble updates straight up to your primary integration form state handler
     onProjectsChange(updated);
 
     // Reset Form Environment
@@ -91,7 +119,7 @@ export default function ProjectManager({ onProjectsChange }) {
       client: "",
       progress: 80,
       url: "",
-      image: PRESET_IMAGES[0].value,
+      image: "",
       tags: [],
     });
     setShowForm(false);
@@ -162,11 +190,11 @@ export default function ProjectManager({ onProjectsChange }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold text-gray-500 mb-1">
-                Deployment URL
+                Site's URL
               </label>
               <input
                 type="url"
-                placeholder="https://..."
+                placeholder="https://.."
                 className="w-full text-xs rounded-lg border bg-white dark:bg-gray-900 dark:text-white border-gray-200 dark:border-gray-800 px-3 py-2 focus:border-purple-500 focus:outline-none"
                 value={newProject.url}
                 onChange={(e) =>
@@ -194,36 +222,44 @@ export default function ProjectManager({ onProjectsChange }) {
             </div>
           </div>
 
-          {/* PRESAVED WORKSPACE ASSET SELECTOR */}
+          {/* PROJECT COVER IMAGE — FILE UPLOAD TO SUPABASE STORAGE */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
-              Choose Frame Display Cover
+            <label className="block text-[11px] font-bold text-gray-500 mb-1">
+              Project Cover Image
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PRESET_IMAGES.map((img) => (
-                <button
-                  key={img.value}
-                  type="button"
-                  onClick={() =>
-                    setNewProject({ ...newProject, image: img.value })
-                  }
-                  className={`px-3 py-2 text-left rounded-lg text-[11px] font-medium border truncate transition-all ${
-                    newProject.image === img.value
-                      ? "bg-purple-50 dark:bg-purple-950/30 border-purple-500 text-purple-700 dark:text-purple-400 font-bold"
-                      : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  {img.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-lg cursor-pointer bg-white dark:bg-gray-900 text-xs text-gray-600 dark:text-gray-300 hover:border-purple-500 transition">
+                {uploadingImage ? (
+                  <Loader2 size={14} className="animate-spin text-purple-600" />
+                ) : (
+                  <ImageIcon size={14} />
+                )}
+                {newProject.image ? "Change Photo" : "Upload from Device"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProjectImageUpload}
+                  disabled={uploadingImage}
+                />
+              </label>
+              {newProject.image && (
+                <img
+                  src={newProject.image}
+                  alt="Preview"
+                  className="h-9 w-16 object-cover rounded border border-gray-200 dark:border-gray-800"
+                />
+              )}
             </div>
           </div>
 
-          {/* CHIPS TAG SELECTOR */}
+          {/* CHIPS TAG SELECTOR WITH MAX-3 WARNING SUMMARY */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
-              Select Tech Stack Frameworks
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-[11px] font-bold text-gray-500">
+                Select Tech Stack Frameworks
+              </label>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {AVAILABLE_TAGS.map((tag) => {
                 const selected = newProject.tags.includes(tag);
@@ -248,9 +284,10 @@ export default function ProjectManager({ onProjectsChange }) {
           <button
             type="button"
             onClick={handleAddProject}
-            className="w-full mt-2 rounded-lg bg-gray-900 dark:bg-purple-600 hover:dark:bg-purple-700 text-white text-xs font-bold py-2.5 transition"
+            disabled={uploadingImage}
+            className="w-full mt-2 rounded-lg bg-gray-900 dark:bg-purple-600 hover:dark:bg-purple-700 text-white text-xs font-bold py-2.5 transition disabled:opacity-50"
           >
-            Append Engine Instance Track
+            Add Project
           </button>
         </div>
       )}
@@ -271,15 +308,23 @@ export default function ProjectManager({ onProjectsChange }) {
               className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950/40 border border-gray-100 dark:border-gray-900 rounded-xl"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`h-8 w-8 rounded-lg flex items-center justify-center text-white ${proj.progress === 100 ? "bg-emerald-500" : "bg-purple-600"}`}
-                >
-                  {proj.progress === 100 ? (
-                    <CheckCircle size={14} />
-                  ) : (
-                    <Flame size={14} />
-                  )}
-                </div>
+                {proj.image ? (
+                  <img
+                    src={proj.image}
+                    alt=""
+                    className="h-8 w-12 rounded object-cover border border-gray-200 dark:border-gray-800"
+                  />
+                ) : (
+                  <div
+                    className={`h-8 w-8 rounded-lg flex items-center justify-center text-white ${proj.progress === 100 ? "bg-emerald-500" : "bg-purple-600"}`}
+                  >
+                    {proj.progress === 100 ? (
+                      <CheckCircle size={14} />
+                    ) : (
+                      <Flame size={14} />
+                    )}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                     {proj.title}

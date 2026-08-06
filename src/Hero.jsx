@@ -33,7 +33,7 @@ const defaultProjectsData = [
   },
   {
     id: "d3",
-    title: " UniTrade × UI Student Union",
+    title: "UniTrade × UI Student Union",
     client: "Collaborated with UI Student Union",
     progress: 85,
     status: "In Progress",
@@ -63,19 +63,18 @@ const defaultProjectsData = [
   },
 ];
 
-function Hero({ profile, customProjects = [], isSubdomain = false }) {
+
+function Hero({ profile, customProjects = null, isSubdomain = false }) {
   const [session, setSession] = useState(null);
   const [mobileFilter, setMobileFilter] = useState("all");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
-  // Resize window tracker setup
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);    
   }, []);
 
-  // Check if user is signed in
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -90,9 +89,35 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Determine active project rendering dataset: Use custom user uploads if they exist, otherwise fallback to filler data
-  const projects =
-    customProjects.length > 0 ? customProjects : defaultProjectsData;
+  useEffect(() => {
+    if (!isSubdomain) return;
+
+    const userSubdomain = profile?.username;
+    if (!userSubdomain) return;
+
+    const profileSubscription = supabase
+      .channel("profile-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `username=eq.${userSubdomain}`,
+        },
+        () => {
+          window.location.reload();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileSubscription);
+    };
+  }, [profile, isSubdomain]);
+
+  const hasSavedProjects = Array.isArray(customProjects);
+  const projects = hasSavedProjects ? customProjects : defaultProjectsData;
 
   const inProgressProjects = projects.filter((p) => p.progress !== 100);
   const completedProjects = projects.filter((p) => p.progress === 100);
@@ -104,7 +129,6 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
         ? completedProjects
         : projects;
 
-  // Reusable functional layout template for the project cards
   const renderProjectCard = (project) => (
     <a
       key={project.id}
@@ -177,8 +201,8 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${
                 project.progress === 100
-                  ? "bg-linear-to-r from-emerald-500 to-teal-400"
-                  : "bg-linear-to-r from-purple-600 to-indigo-500"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+                  : "bg-gradient-to-r from-purple-600 to-indigo-500"
               }`}
               style={{ width: `${project.progress}%` }}
             />
@@ -187,7 +211,6 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
 
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400">
-            <span>Launch Preview</span>
             <ExternalLink size={12} />
           </div>
         </div>
@@ -198,7 +221,6 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
   return (
     <main className="w-full overflow-x-hidden bg-gray-50 px-6 py-12 transition-colors duration-300 dark:bg-gray-950 md:py-20">
       <div className="mx-auto max-w-7xl space-y-16">
-        {/* HERO HEADER SECTION */}
         <div className="text-center md:mx-auto md:max-w-3xl">
           <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-purple-100 bg-purple-50/50 px-4 py-1.5 text-xs font-semibold text-purple-700 dark:border-purple-900/30 dark:bg-purple-950/40 dark:text-purple-400">
             <Flame size={20} className="animate-pulse text-purple-600" />
@@ -206,7 +228,7 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
             {profile?.developer_name || "Live Development"}{" "}
-            <span className="bg-linear-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
               {profile ? "Workspace" : "Sprints"}
             </span>{" "}
             {profile ? "" : "Center"}
@@ -221,22 +243,21 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
             <div className="mt-6">
               <Link
                 to="/dashboard"
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
               >
-                <span>Dashboard</span>
                 <Gauge size={18} />
+                <span>Dashboard</span>
               </Link>
             </div>
           )}
         </div>
 
-        {/* INTERACTIVE WORKSPACE GRID */}
         <section className="space-y-6">
           <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-800">
             <div className="flex items-center gap-2">
               <LayoutGrid size={20} className="text-purple-600" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {customProjects.length > 0
+                {hasSavedProjects
                   ? "Personal Built Projects"
                   : "Current Production Tracks"}
               </h2>
@@ -246,7 +267,6 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
             </span>
           </div>
 
-          {/* MOBILE FILTER TOGGLE */}
           <div className="flex sm:hidden w-full">
             <div className="inline-flex w-full rounded-full bg-gray-100 p-1.5 dark:bg-gray-800">
               {["all", "in-progress", "completed"].map((filter) => (
@@ -265,12 +285,19 @@ function Hero({ profile, customProjects = [], isSubdomain = false }) {
             </div>
           </div>
 
-          {/* Desktop & Mobile Responsive Unified Grid Layout */}
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {(isMobile ? mobileFilteredProjects : projects).map((project) =>
-              renderProjectCard(project),
-            )}
-          </div>
+          {projects.length === 0 ? (
+            <div className="text-center py-12 border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                No projects to show yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {(isMobile ? mobileFilteredProjects : projects).map((project) =>
+                renderProjectCard(project),
+              )}
+            </div>
+          )}
         </section>
       </div>
     </main>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+ import { useState, useEffect } from "react";
 import { getSubdomain } from "./utils/subdomain";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
