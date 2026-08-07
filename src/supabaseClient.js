@@ -14,4 +14,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+console.error("RAW supabaseUrl:", JSON.stringify(supabaseUrl));
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
