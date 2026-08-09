@@ -11,9 +11,9 @@ import {
   ChevronUp,
   ExternalLink,
   CheckCircle,
-  Cat,
   Code2,
   Trash2,
+  Cat,
 } from "lucide-react";
 
 const THEME_PALETTE = [
@@ -165,6 +165,11 @@ const DEFAULT_PROJECTS = [
   },
 ];
 
+const isValidWhatsAppNumber = (value) => {
+  if (!value.trim()) return true;
+  return /^\+[1-9]\d{6,14}$/.test(value.trim());
+};
+
 function Dashboard() {
   const [session, setSession] = useState(null);
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
@@ -181,12 +186,9 @@ function Dashboard() {
 
   const [customWorkspace, setCustomWorkspace] = useState({
     siteName: "",
-    developerTitle: "",
-    repoUrl: "",
   });
   const [integrationData, setIntegrationData] = useState({
     whatsappHandle: "",
-    telegramHandle: "",
   });
 
   const filteredThemes =
@@ -207,7 +209,7 @@ function Dashboard() {
         const { data, error } = await supabase
           .from("profiles")
           .select(
-            "github_repo_url, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
+            "github_repo_url, username, developer_name, whatsapp_number, selected_projects",
           )
           .eq("id", session.user.id)
           .maybeSingle();
@@ -227,13 +229,10 @@ function Dashboard() {
 
           setCustomWorkspace({
             siteName: data.developer_name || "",
-            developerTitle: data.bio || "",
-            repoUrl: data.github_repo_url || "",
           });
 
           setIntegrationData({
             whatsappHandle: data.whatsapp_number || "",
-            telegramHandle: data.telegram_handle || "",
           });
 
           if (data.selected_projects) {
@@ -254,21 +253,23 @@ function Dashboard() {
     });
   }, []);
 
-const handleConnectGitHub = () => {
-  if (!session?.user?.id) {
-    alert("Please log in before connecting your GitHub account.");
-    return;
-  }
-  if (!hasLiveSite) {
-    alert("Please claim your subdomain first before connecting GitHub.");
-    return;
-  }
-  const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-  const redirectUri =
-    "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
-  window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${session.user.id}`;
-};
-  
+  const handleConnectGitHub = () => {
+    if (!session?.user?.id) {
+      alert("Please log in before connecting your GitHub account.");
+      return;
+    }
+    if (!hasLiveSite) {
+      alert("Please claim your subdomain first before connecting GitHub.");
+      return;
+    }
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const redirectUri =
+      "https://umiauevfaxqlfbuujskl.supabase.co/functions/v1/github-callback";
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+      redirectUri,
+    )}&scope=repo&state=${session.user.id}`;
+  };
+
   const handleWorkspaceChange = (e) => {
     setCustomWorkspace({ ...customWorkspace, [e.target.name]: e.target.value });
   };
@@ -285,10 +286,8 @@ const handleConnectGitHub = () => {
     ) {
       setCustomWorkspace({
         siteName: "",
-        developerTitle: "",
-        repoUrl: "",
       });
-      setIntegrationData({ whatsappHandle: "", telegramHandle: "" });
+      setIntegrationData({ whatsappHandle: "" });
       setCustomProjectsList(DEFAULT_PROJECTS);
     }
   };
@@ -309,6 +308,13 @@ const handleConnectGitHub = () => {
       return;
     }
 
+    if (!isValidWhatsAppNumber(integrationData.whatsappHandle)) {
+      alert(
+        "WhatsApp number needs a country code, starting with + — e.g. +1 415 555 2671 or +44 7911 123456.",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from("profiles").upsert([
@@ -316,10 +322,8 @@ const handleConnectGitHub = () => {
           id: session?.user?.id,
           username: cleanSubdomain,
           developer_name: customWorkspace.siteName,
-          bio: customWorkspace.developerTitle,
           email: session?.user?.email,
           whatsapp_number: integrationData.whatsappHandle,
-          telegram_handle: integrationData.telegramHandle,
           selected_projects: JSON.stringify(customProjectsList),
           theme_preference: selectedTheme,
         },
@@ -470,59 +474,58 @@ const handleConnectGitHub = () => {
         )}
 
         {copyStep === "selection" && (
-  <div className="space-y-4">
-    <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-      <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-        <Code2 size={16} className="text-purple-500" /> Package Manifest
-        Bundle Contents:
-      </p>
-      <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-        <li>
-          Fully Configured Recharts Month-over-Month Line Flowcharts
-        </li>
-        <li>Adaptive 4-Column Statcard Grid UI Containers</li>
-        <li>
-          No-Code Dynamic JSON State Mutators for Sprints & Images
-        </li>
-      </ul>
-    </div>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+              <p className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                <Code2 size={16} className="text-purple-500" /> Package Manifest
+                Bundle Contents:
+              </p>
+              <ul className="list-disc pl-4 mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                <li>
+                  Fully Configured Recharts Month-over-Month Line Flowcharts
+                </li>
+                <li>Adaptive 4-Column Statcard Grid UI Containers</li>
+                <li>
+                  No-Code Dynamic JSON State Mutators for Sprints & Images
+                </li>
+              </ul>
+            </div>
 
-    {!hasLiveSite ? (
-      <button
-        onClick={() => setCopyStep("manualForm")}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
-      >
-        Type Parameters <ArrowRight size={14} />
-      </button>
-    ) : (
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={
-            githubRepoUrl
-              ? () => window.open(githubRepoUrl, "_blank")
-              : handleConnectGitHub
-          }
-          className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-            githubRepoUrl
-              ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400"
-              : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
-          }`}
-        >
-          <Copy size={14} />{" "}
-          {githubRepoUrl ? "Connect Repo" : "Connect GitHub"}
-        </button>
+            {!hasLiveSite ? (
+              <button
+                onClick={() => setCopyStep("manualForm")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+              >
+                Type Parameters <ArrowRight size={14} />
+              </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={
+                    githubRepoUrl
+                      ? () => window.open(githubRepoUrl, "_blank")
+                      : handleConnectGitHub
+                  }
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                    githubRepoUrl
+                      ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400"
+                      : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Copy size={14} />{" "}
+                  {githubRepoUrl ? "Connect Repo" : "Connect GitHub"}
+                </button>
 
-        <button
-          onClick={() => setCopyStep("integrations")}
-          className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
-        >
-          Update Live Site <ArrowRight size={14} />
-        </button>
-      </div>
-    )}
-  </div>
-)}
-
+                <button
+                  onClick={() => setCopyStep("integrations")}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition py-3"
+                >
+                  Update Live Site <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {copyStep === "manualForm" && (
           <div className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800">
@@ -540,37 +543,22 @@ const handleConnectGitHub = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Professional's/Dev Name
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    name="siteName"
-                    value={customWorkspace.siteName}
-                    onChange={handleWorkspaceChange}
-                    placeholder="OP Emma"
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
-                  />
-                  <Cat
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
-                    size={16}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Bio / Professional Title
-                </label>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Professional's/Dev Name
+              </label>
+              <div className="relative flex items-center">
                 <input
                   type="text"
-                  name="developerTitle"
-                  value={customWorkspace.developerTitle}
+                  name="siteName"
+                  value={customWorkspace.siteName}
                   onChange={handleWorkspaceChange}
-                  placeholder="Lead Engineer"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  placeholder="OP Emma"
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-3 pr-9 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                />
+                <Cat
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 dark:text-purple-400 pointer-events-none"
+                  size={16}
                 />
               </div>
             </div>
@@ -588,9 +576,7 @@ const handleConnectGitHub = () => {
                     ? setCopyStep("integrations")
                     : setCopyStep("domainPopup")
                 }
-                disabled={
-                  !customWorkspace.siteName || !customWorkspace.developerTitle
-                }
+                disabled={!customWorkspace.siteName}
                 className="w-2/3 rounded-lg bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 py-2.5 disabled:opacity-40"
               >
                 {hasLiveSite ? "Configure Core Extensions" : "Allocate Domain"}
@@ -658,33 +644,21 @@ const handleConnectGitHub = () => {
               onSubmit={handlePublishWorkspace}
               className="space-y-4 bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    WhatsApp Number
-                  </label>
-                  <input
-                    type="text"
-                    name="whatsappHandle"
-                    value={integrationData.whatsappHandle}
-                    onChange={handleIntegrationChange}
-                    placeholder="+234..."
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    Telegram Handle
-                  </label>
-                  <input
-                    type="text"
-                    name="telegramHandle"
-                    value={integrationData.telegramHandle}
-                    onChange={handleIntegrationChange}
-                    placeholder="@username"
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  WhatsApp Number
+                </label>
+                <p className="text-[11px] text-gray-400 mb-1.5">
+                  Include your country code, e.g. +1 415 555 2671
+                </p>
+                <input
+                  type="text"
+                  name="whatsappHandle"
+                  value={integrationData.whatsappHandle}
+                  onChange={handleIntegrationChange}
+                  placeholder="+1 415 555 2671"
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                />
               </div>
 
               <div className="flex gap-3 pt-2">

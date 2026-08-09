@@ -11,7 +11,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 
-function Header({ profile }) {
+function Header({ profile, isSubdomain = false }) {
   const [session, setSession] = useState(null);
   const [authEmail, setAuthEmail] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -92,20 +92,26 @@ function Header({ profile }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const buildWhatsAppLink = (rawNumber, message) => {
+    const digitsOnly = rawNumber.replace(/[^0-9]/g, "");
+    return `https://wa.me/${digitsOnly}?text=${encodeURIComponent(message)}`;
+  };
+
   const handleConnectSubmit = (e) => {
     e.preventDefault();
     const message = `Hi! I'd like to connect.\n\nName: ${formData.name}\nEmail: ${formData.email}`;
-    const encodedMessage = encodeURIComponent(message);
-
-    window.open(
-      `https://wa.me/${WHATSAPP_TARGET}?text=${encodedMessage}`,
-      "_blank",
-    );
-
+    window.open(buildWhatsAppLink(WHATSAPP_TARGET, message), "_blank");
     setIsOpen(false);
   };
 
   const brandName = profile?.developer_name || profile?.username || "DevHub";
+
+  // Subdomain visitors go straight to WhatsApp — no form, no login,
+  // the owner's own saved number is served automatically
+  const handleSubdomainConnect = () => {
+    const message = `Hi ${brandName}! I'd like to connect.`;
+    window.open(buildWhatsAppLink(profile.whatsapp_number, message), "_blank");
+  };
 
   return (
     <>
@@ -114,7 +120,7 @@ function Header({ profile }) {
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* LOGO — Left Side */}
           <div className="flex items-center gap-2 z-10">
-            <div className="rounded-lg bg-purple-600 p-2 text-white shrink-0">
+            <div className="rounded-lg bg-purple-600 p-2 text-white">
               <Layers size={20} />
             </div>
             <a
@@ -152,10 +158,18 @@ function Header({ profile }) {
               </span>
             </button>
           </div>
-
-          {/* AUTH + ACTION — Far Right Side */}
           <div className="flex items-center gap-2 sm:gap-3 z-10 shrink-0">
-            {session ? (
+            {isSubdomain ? (
+              profile?.whatsapp_number && (
+                <button
+                  onClick={handleSubdomainConnect}
+                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <span>Connect</span>
+                  <LinkIcon size={14} />
+                </button>
+              )
+            ) : session ? (
               <>
                 <button
                   onClick={handleLogout}

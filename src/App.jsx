@@ -88,7 +88,7 @@ function App() {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
-            "id, username, developer_name, bio, whatsapp_number, telegram_handle, selected_projects",
+            "id, username, developer_name, bio, whatsapp_number, selected_projects",
           )
           .eq("username", subdomain)
           .maybeSingle(); // Prevents throwing hard unhandled errors if profile doesn't exist
@@ -170,8 +170,7 @@ function App() {
 
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-white dark:bg-gray-950">
-        {/* We pass down database values right into your custom view templates */}
-        <Header profile={profileData} />
+        <Header profile={profileData} isSubdomain={true} />
         <Hero
           profile={profileData}
           customProjects={projectData}
@@ -190,7 +189,7 @@ function App() {
           path="/"
           element={
             <div className="relative min-h-screen bg-white dark:bg-gray-950">
-              <Header profile={null} />
+              <Header profile={null} isSubdomain={false} />
               <Hero profile={null} customProjects={null} isSubdomain={false} />
             </div>
           }
