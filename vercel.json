@@ -1,18 +1,7 @@
 {
-  "headers": [
-    {
-      "source": "/assets/(.*).js",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
-      ]
-    }
-  ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|json|woff2?)).*)",
       "destination": "/index.html"
     }
   ]
