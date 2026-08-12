@@ -20,6 +20,8 @@ function Header({ profile, isSubdomain = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModal, setIsAuthModal] = useState(false);
 
+// add line 
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
