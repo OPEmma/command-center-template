@@ -88,7 +88,7 @@ function App() {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
-            "id, username, developer_name, bio, whatsapp_number, selected_projects",
+            "id, username, developer_name, whatsapp_number, selected_projects",
           )
           .eq("username", subdomain)
           .maybeSingle(); // Prevents throwing hard unhandled errors if profile doesn't exist
