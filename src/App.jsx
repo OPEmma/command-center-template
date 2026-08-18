@@ -44,9 +44,11 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const host = window.location.hostname.toLowerCase().trim();
+    // 1. Strip port if present (e.g. "ed.devhub.ng:443" -> "ed.devhub.ng")
+    const rawHost = window.location.hostname.toLowerCase().trim();
+    const host = rawHost.split(":")[0];
 
-    // 1. Explicitly check for our main root platforms and local environments
+    // 2. Explicitly check for root domains or local dev
     if (
       host === "devhub.ng" ||
       host === "www.devhub.ng" ||
@@ -58,27 +60,28 @@ function App() {
       return;
     }
 
-    // 2. Handle active user subdomains (e.g., username.devhub.ng)
+    // 3. Handle active user subdomains (e.g., ed.devhub.ng)
     if (host.endsWith(".devhub.ng")) {
-      const extracted = host
-        .replace(/^www\./, "")
-        .replace(".devhub.ng", "")
-        .toLowerCase()
-        .trim();
+      const parts = host.split(".");
+      // For "ed.devhub.ng", parts = ["ed", "devhub", "ng"] -> parts.length === 3
+      if (parts.length >= 3) {
+        const extracted = parts[0].replace(/^www\./, "").trim();
 
-      if (RESERVED_SUBDOMAINS.includes(extracted)) {
-        setSubdomain(null);
+        if (RESERVED_SUBDOMAINS.includes(extracted) || !extracted) {
+          setSubdomain(null);
+        } else {
+          setSubdomain(extracted);
+        }
       } else {
-        setSubdomain(extracted);
+        setSubdomain(null);
       }
-      setLoading(false);
     } else {
-      // 3. Fallback: If it's any other custom domain string, it is NOT a platform user subdomain
+      // Fallback for root domain / unhandled custom domains
       setSubdomain(null);
-      setLoading(false);
     }
-  }, []);
 
+    setLoading(false);
+  }, []);
   // 3. Fetch profile and its saved project config from the profiles table
   useEffect(() => {
     if (!subdomain) return;
