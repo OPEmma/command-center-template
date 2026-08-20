@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "./supabaseClient.js";
+import { getThemeColors, hexToRgba } from "./themePalette.js";
 import {
   ExternalLink,
   CheckCircle2,
@@ -63,16 +64,17 @@ const defaultProjectsData = [
   },
 ];
 
-
 function Hero({ profile, customProjects = null, isSubdomain = false }) {
   const [session, setSession] = useState(null);
   const [mobileFilter, setMobileFilter] = useState("all");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
+  const [primary, secondary] = getThemeColors(profile?.theme_preference);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);    
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -135,7 +137,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
       href={project.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-600/5 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-purple-900/40 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--theme-primary)]/40 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[var(--theme-primary)]/40 cursor-pointer"
     >
       <div className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
         <img
@@ -145,11 +147,13 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
           loading="lazy"
         />
         <div
-          className={`absolute top-3 right-3 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur-md ${
-            project.progress === 100
-              ? "bg-emerald-500/90 text-white"
-              : "bg-purple-600/90 text-white"
-          }`}
+          className="absolute top-3 right-3 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur-md text-white"
+          style={{
+            backgroundColor:
+              project.progress === 100
+                ? "rgba(16, 185, 129, 0.9)"
+                : hexToRgba(primary, 0.9),
+          }}
         >
           {project.progress === 100 ? (
             <CheckCircle2 size={12} />
@@ -172,7 +176,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
             </span>
           ))}
         </div>
-        <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+        <h3 className="font-bold text-gray-900 line-clamp-1 dark:text-white transition-colors duration-200 group-hover:text-[var(--theme-primary)]">
           {project.title}
         </h3>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -191,7 +195,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
               className={
                 project.progress === 100
                   ? "text-emerald-500"
-                  : "text-purple-600 dark:text-purple-400"
+                  : "text-[var(--theme-primary)]"
               }
             >
               {project.progress}%
@@ -202,7 +206,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
               className={`h-full rounded-full transition-all duration-1000 ease-out ${
                 project.progress === 100
                   ? "bg-gradient-to-r from-emerald-500 to-teal-400"
-                  : "bg-gradient-to-r from-purple-600 to-indigo-500"
+                  : "bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)]"
               }`}
               style={{ width: `${project.progress}%` }}
             />
@@ -210,7 +214,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
         </div>
 
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 transition-colors duration-200 group-hover:text-[var(--theme-primary)] dark:text-gray-500">
             <ExternalLink size={12} />
           </div>
         </div>
@@ -219,31 +223,56 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
   );
 
   return (
-    <main className="w-full overflow-x-hidden bg-gray-50 px-6 py-12 transition-colors duration-300 dark:bg-gray-950 md:py-20">
+    <main
+      className="w-full overflow-x-hidden bg-gray-50 px-6 py-12 transition-colors duration-300 dark:bg-gray-950 md:py-20"
+      style={{ "--theme-primary": primary, "--theme-secondary": secondary }}
+    >
       <div className="mx-auto max-w-7xl space-y-16">
         <div className="text-center md:mx-auto md:max-w-3xl">
-          <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-purple-100 bg-purple-50/50 px-4 py-1.5 text-xs font-semibold text-purple-700 dark:border-purple-900/30 dark:bg-purple-950/40 dark:text-purple-400">
-            <Flame size={20} className="animate-pulse text-purple-600" />
+          <div
+            className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold"
+            style={{
+              border: `1px solid ${hexToRgba(primary, 0.2)}`,
+              backgroundColor: hexToRgba(primary, 0.06),
+              color: primary,
+            }}
+          >
+            <Flame
+              size={20}
+              className="animate-pulse"
+              style={{ color: primary }}
+            />
             <span>Active Deployment Infrastructure Environment</span>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-            {profile?.developer_name || "Live Development"}{" "}
-            <span className="bg-gradient-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
-              {profile ? "Workspace" : "Sprints"}
-            </span>{" "}
-            {profile ? "" : "Center"}
-          </h1>
 
-          <p className="mt-4 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
-            {profile?.bio ||
-              "Track live project metrics, fork layout structures, and preview functional client production pipelines instantly."}
-          </p>
+          {profile ? (
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+              {profile?.developer_name || profile?.username}'s{" "}
+              <span className="bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] bg-clip-text text-transparent">
+                Portfolio
+              </span>
+            </h1>
+          ) : (
+            <>
+              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+                Live Development{" "}
+                <span className="bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] bg-clip-text text-transparent">
+                  Sprints
+                </span>{" "}
+                Center
+              </h1>
+              <p className="mt-4 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
+                Track live project metrics, fork layout structures, and preview
+                functional client production pipelines instantly.
+              </p>
+            </>
+          )}
 
           {!isSubdomain && session && (
             <div className="mt-6">
               <Link
                 to="/dashboard"
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 hover:opacity-90"
               >
                 <Gauge size={18} />
                 <span>Dashboard</span>
@@ -255,7 +284,7 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
         <section className="space-y-6">
           <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-800">
             <div className="flex items-center gap-2">
-              <LayoutGrid size={20} className="text-purple-600" />
+              <LayoutGrid size={20} style={{ color: primary }} />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {hasSavedProjects
                   ? "Personal Built Projects"
@@ -275,9 +304,12 @@ function Hero({ profile, customProjects = null, isSubdomain = false }) {
                   onClick={() => setMobileFilter(filter)}
                   className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 capitalize ${
                     mobileFilter === filter
-                      ? "bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400"
+                      ? "bg-white shadow-sm dark:bg-gray-700"
                       : "text-gray-500 dark:text-gray-400"
                   }`}
+                  style={
+                    mobileFilter === filter ? { color: primary } : undefined
+                  }
                 >
                   {filter.replace("-", " ")}
                 </button>

@@ -1,5 +1,6 @@
 import { supabase } from "./supabaseClient.js";
 import { useState, useEffect } from "react";
+import { getThemeColors, hexToRgba } from "./themePalette.js";
 import {
   X,
   Layers,
@@ -20,8 +21,6 @@ function Header({ profile, isSubdomain = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModal, setIsAuthModal] = useState(false);
 
-// add line 
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,6 +28,8 @@ function Header({ profile, isSubdomain = false }) {
 
   const WHATSAPP_TARGET = profile?.whatsapp_number || "2348060110195";
   const [theme, setTheme] = useState("light");
+
+  const [primary, secondary] = getThemeColors(profile?.theme_preference);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -108,21 +109,22 @@ function Header({ profile, isSubdomain = false }) {
 
   const brandName = profile?.developer_name || profile?.username || "DevHub";
 
-  // Subdomain visitors go straight to WhatsApp — no form, no login,
-  // the owner's own saved number is served automatically
   const handleSubdomainConnect = () => {
     const message = `Hi ${brandName}! I'd like to connect.`;
     window.open(buildWhatsAppLink(profile.whatsapp_number, message), "_blank");
   };
 
   return (
-    <>
+    <div style={{ "--theme-primary": primary, "--theme-secondary": secondary }}>
       <header className="sticky top-0 z-50 w-full overflow-x-hidden border-b border-purple-100 bg-white/80 backdrop-blur-md transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900/80">
         {/* FIXED CONTAINER: Added relative positioning to anchor the absolute centered toggle item */}
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* LOGO — Left Side */}
           <div className="flex items-center gap-2 z-10">
-            <div className="rounded-lg bg-purple-600 p-2 text-white">
+            <div
+              className="rounded-lg p-2 text-white"
+              style={{ backgroundColor: primary }}
+            >
               <Layers size={20} />
             </div>
             <a
@@ -133,7 +135,7 @@ function Header({ profile, isSubdomain = false }) {
                 brandName
               ) : (
                 <>
-                  Dev<span className="text-purple-600">Hub</span>
+                  Dev<span style={{ color: primary }}>Hub</span>
                 </>
               )}
             </a>
@@ -144,7 +146,7 @@ function Header({ profile, isSubdomain = false }) {
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
             <button
               onClick={toggleTheme}
-              className="group relative flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 overflow-hidden rounded-xl border bg-gray-50 px-2.5 sm:px-4 text-gray-600 transition-all duration-300 hover:text-purple-600 hover:border-purple-300 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-purple-400 whitespace-nowrap"
+              className="group relative flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 overflow-hidden rounded-xl border bg-gray-50 px-2.5 sm:px-4 text-gray-600 transition-all duration-300 hover:text-[var(--theme-primary)] hover:border-[var(--theme-primary)]/40 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 whitespace-nowrap"
               aria-label="Toggle website theme mode"
             >
               <Sun
@@ -165,7 +167,7 @@ function Header({ profile, isSubdomain = false }) {
               profile?.whatsapp_number && (
                 <button
                   onClick={handleSubdomainConnect}
-                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                  className="rounded-xl bg-linear-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 hover:opacity-90 flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <span>Connect</span>
                   <LinkIcon size={14} />
@@ -186,7 +188,7 @@ function Header({ profile, isSubdomain = false }) {
                     setIsAuthModal(false);
                     setIsOpen(true);
                   }}
-                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                  className="rounded-xl bg-linear-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 hover:opacity-90 flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <span>Connect</span>
                   <LinkIcon size={14} />
@@ -198,7 +200,8 @@ function Header({ profile, isSubdomain = false }) {
                   setIsAuthModal(true);
                   setIsOpen(true);
                 }}
-                className="rounded-xl bg-purple-600 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all duration-200 active:scale-95 whitespace-nowrap"
+                className="rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 hover:opacity-90 whitespace-nowrap"
+                style={{ backgroundColor: primary }}
               >
                 Get Started
               </button>
@@ -219,8 +222,11 @@ function Header({ profile, isSubdomain = false }) {
             </button>
 
             <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 mb-3">
-                <LogIn size={24} className="text-purple-600" />
+              <div
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full mb-3"
+                style={{ backgroundColor: hexToRgba(primary, 0.12) }}
+              >
+                <LogIn size={24} style={{ color: primary }} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 Sign in to DevHub
@@ -237,7 +243,7 @@ function Header({ profile, isSubdomain = false }) {
                 value={authEmail}
                 onChange={(e) => setAuthEmail(e.target.value)}
                 placeholder="your-email@example.com"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-4 py-3 text-sm focus:border-[var(--theme-primary)] focus:outline-none"
               />
 
               {authError && (
@@ -247,7 +253,8 @@ function Header({ profile, isSubdomain = false }) {
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90"
+                style={{ backgroundColor: primary }}
               >
                 <Mail size={16} />
                 {authLoading ? "Sending link..." : "Send Verification Link"}
@@ -288,7 +295,7 @@ function Header({ profile, isSubdomain = false }) {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="John Doe"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-[var(--theme-primary)] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -302,7 +309,7 @@ function Header({ profile, isSubdomain = false }) {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="john@example.com"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-purple-500 focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2.5 text-sm focus:border-[var(--theme-primary)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -317,7 +324,8 @@ function Header({ profile, isSubdomain = false }) {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-purple-600 text-xs sm:text-sm font-semibold text-white hover:bg-purple-700 py-2.5"
+                  className="rounded-xl text-xs sm:text-sm font-semibold text-white py-2.5 hover:opacity-90"
+                  style={{ backgroundColor: primary }}
                 >
                   Connect Messenger
                 </button>
@@ -326,7 +334,7 @@ function Header({ profile, isSubdomain = false }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
