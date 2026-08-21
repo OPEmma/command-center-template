@@ -119,56 +119,75 @@ function Dashboard() {
     : filteredThemes.slice(0, 6);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      if (!session) {
+    const fetchUserData = async (currentSession) => {
+      setSession(currentSession);
+      if (!currentSession) {
         window.location.href = "/";
-      } else {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select(
-            "github_repo_url, username, developer_name, whatsapp_number, selected_projects",
-          )
-          .eq("id", session.user.id)
-          .maybeSingle();
+        return;
+      }
 
-        if (error) {
-          console.error("Supabase fetch error:", error.message);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(
+          "github_repo_url, username, developer_name, whatsapp_number, selected_projects, theme_preference",
+        )
+        .eq("id", currentSession.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase fetch error:", error.message);
+        return;
+      }
+
+      if (data) {
+        if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
+
+        if (data.username && data.username.trim() !== "") {
+          setSubdomain(data.username);
+          setPublishedUrl(`https://${data.username}.devhub.ng`);
+          setHasLiveSite(true);
         }
 
-        if (data) {
-          if (data.github_repo_url) setGithubRepoUrl(data.github_repo_url);
+        setCustomWorkspace({
+          siteName: data.developer_name || "",
+        });
 
-          if (data.username && data.username.trim() !== "") {
-            setSubdomain(data.username);
-            setPublishedUrl(`https://${data.username}.devhub.ng`);
-            setHasLiveSite(true);
-          }
+        setIntegrationData({
+          whatsappHandle: data.whatsapp_number || "",
+        });
 
-          setCustomWorkspace({
-            siteName: data.developer_name || "",
-          });
+        // ✅ Hydrate theme preference from DB
+        if (data.theme_preference) {
+          setSelectedTheme(data.theme_preference);
+        }
 
-          setIntegrationData({
-            whatsappHandle: data.whatsapp_number || "",
-          });
-
-          if (data.selected_projects) {
-            try {
-              const parsed =
-                typeof data.selected_projects === "string"
-                  ? JSON.parse(data.selected_projects)
-                  : data.selected_projects;
-              setCustomProjectsList(
-                Array.isArray(parsed) ? parsed : DEFAULT_PROJECTS,
-              );
-            } catch (e) {
-              setCustomProjectsList(DEFAULT_PROJECTS);
-            }
+        if (data.selected_projects) {
+          try {
+            const parsed =
+              typeof data.selected_projects === "string"
+                ? JSON.parse(data.selected_projects)
+                : data.selected_projects;
+            setCustomProjectsList(
+              Array.isArray(parsed) ? parsed : DEFAULT_PROJECTS,
+            );
+          } catch (e) {
+            setCustomProjectsList(DEFAULT_PROJECTS);
           }
         }
       }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      fetchUserData(session);
     });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleConnectGitHub = () => {
@@ -212,10 +231,10 @@ function Dashboard() {
 
   const handlePublishWorkspace = async (e) => {
     if (e) e.preventDefault();
-    const cleanSubdomain = subdomain.toLowerCase().trim();
+    const cleanSubdomain = subdomain.toLowerCase().trim().replace(/^-+|-+$/g, "");
 
     if (!cleanSubdomain) {
-      alert("Please enter a custom username/subdomain!");
+      alert("Please enter a valid custom username/subdomain!");
       return;
     }
 
