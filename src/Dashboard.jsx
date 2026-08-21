@@ -231,7 +231,10 @@ function Dashboard() {
 
   const handlePublishWorkspace = async (e) => {
     if (e) e.preventDefault();
-    const cleanSubdomain = subdomain.toLowerCase().trim().replace(/^-+|-+$/g, "");
+    const cleanSubdomain = subdomain
+      .toLowerCase()
+      .trim()
+      .replace(/^-+|-+$/g, "");
 
     if (!cleanSubdomain) {
       alert("Please enter a valid custom username/subdomain!");

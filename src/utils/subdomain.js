@@ -11,7 +11,7 @@ export function getSubdomain() {
   if (hostname.endsWith("devhub.ng")) {
     const parts = hostname.replace(".devhub.ng", "").split(".");
     // If anything is left over before devhub.ng, and it's not 'www', treat it as a subdomain
-    if (parts.length > 0 && parts[0] !== "" && parts[0] !== "www") {
+    if (parts.length > 0 && parts[0] !== "" && parts[0] !== "www") {  
       return parts[0]; // Returns "alex" from alex.devhub.ng
     }
   }
